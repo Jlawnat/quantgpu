@@ -4,7 +4,7 @@ from math import sqrt
 
 import numpy as np
 from numpy.typing import NDArray
-
+from quantgpu.simulation.rng import validate_seed
 
 def simulate_gbm_terminal(
     *,
@@ -24,6 +24,7 @@ def simulate_gbm_terminal(
         raise ValueError("maturity must be non-negative")
     if n_paths <= 0:
         raise ValueError("n_paths must be positive")
+    seed = validate_seed(seed)
 
     if maturity == 0:
         return np.full(n_paths, spot, dtype=np.float64)

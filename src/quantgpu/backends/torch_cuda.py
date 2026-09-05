@@ -5,7 +5,7 @@ from math import exp, sqrt
 import torch
 
 from quantgpu.backends.protocol import PricingResult
-
+from quantgpu.simulation.rng import validate_seed
 
 def _require_cuda() -> torch.device:
     """Return the CUDA device or raise if CUDA is unavailable."""
@@ -34,7 +34,7 @@ def simulate_gbm_terminal_torch_cuda(
         raise ValueError("maturity must be non-negative")
     if n_paths <= 0:
         raise ValueError("n_paths must be positive")
-
+    seed = validate_seed(seed)
     device = _require_cuda()
 
     if maturity == 0:
@@ -47,7 +47,9 @@ def simulate_gbm_terminal_torch_cuda(
 
     generator = torch.Generator(device=device)
 
-    if seed is not None:
+    if seed is None:
+        generator.seed()
+    else:   
         generator.manual_seed(seed)
 
     z = torch.randn(
