@@ -1,44 +1,52 @@
 from __future__ import annotations
 
 import csv
-import platform
 from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
 
+from quantgpu.benchmarking.schema import BENCHMARK_SCHEMA_VERSION
+from quantgpu.benchmarking.system_info import get_system_info
 from quantgpu.benchmarking.timer import benchmark_callable
 from quantgpu.pricing.black_scholes import black_scholes_call
 from quantgpu.pricing.monte_carlo import price_european_call_mc
-from quantgpu.benchmarking.system_info import get_system_info
+
 
 RESULTS_DIR = Path("benchmarks/results")
-RESULTS_FILE = RESULTS_DIR / "monte_carlo_numpy.csv"
+RESULTS_FILE = RESULTS_DIR / "monte_carlo_numpy_v1.csv"
+
+BACKEND = "numpy"
+DEVICE = "cpu"
+
+WARMUP_RUNS = 1
+REPETITIONS = 5
+
+PATH_COUNTS = [
+    10_000,
+    100_000,
+    1_000_000,
+]
 
 
-def main() -> None:
-    """Benchmark NumPy Monte Carlo pricing across several path counts."""
+def run_benchmark() -> list[dict[str, str | int | float]]:
+    """Run the NumPy Monte Carlo benchmark suite."""
     spot = 100.0
     strike = 100.0
     maturity = 1.0
     rate = 0.05
     volatility = 0.20
     seed = 42
+
     system_info = get_system_info()
 
-    reference = black_scholes_call(
+    reference_price = black_scholes_call(
         spot=spot,
         strike=strike,
         maturity=maturity,
         rate=rate,
         volatility=volatility,
     )
-
-    path_counts = [
-        10_000,
-        100_000,
-        1_000_000,
-    ]
 
     rows: list[dict[str, str | int | float]] = []
 
@@ -49,7 +57,7 @@ def main() -> None:
         f"{'abs_error':>12}"
     )
 
-    for n_paths in path_counts:
+    for n_paths in PATH_COUNTS:
 
         def workload() -> None:
             price_european_call_mc(
@@ -64,8 +72,8 @@ def main() -> None:
 
         timing = benchmark_callable(
             workload,
-            warmup_runs=1,
-            repetitions=5,
+            warmup_runs=WARMUP_RUNS,
+            repetitions=REPETITIONS,
         )
 
         result = price_european_call_mc(
@@ -79,8 +87,11 @@ def main() -> None:
         )
 
         median_ms = timing.median_seconds * 1_000.0
+        min_ms = timing.min_seconds * 1_000.0
+        max_ms = timing.max_seconds * 1_000.0
+
         throughput = n_paths / timing.median_seconds
-        absolute_error = abs(result.price - reference)
+        absolute_error = abs(result.price - reference_price)
 
         print(
             f"{n_paths:12,d} "
@@ -91,41 +102,51 @@ def main() -> None:
 
         rows.append(
             {
+                "schema_version": BENCHMARK_SCHEMA_VERSION,
                 "timestamp_utc": datetime.now(UTC).isoformat(),
-                "backend": "numpy",
-                "device": "cpu",
-                "python_version": platform.python_version(),
+                "backend": BACKEND,
+                "device": DEVICE,
+                "python_version": system_info.python_version,
                 "numpy_version": np.__version__,
-                "n_paths": n_paths,
-                "warmup_runs": 1,
-                "repetitions": 5,
-                "median_ms": median_ms,
-                "min_ms": timing.min_seconds * 1_000.0,
-                "max_ms": timing.max_seconds * 1_000.0,
-                "throughput_paths_per_sec": throughput,
-                "estimated_price": result.price,
-                "reference_price": reference,
-                "absolute_error": absolute_error,
-                "standard_error": result.standard_error,
-                "seed": seed,
                 "os": system_info.os,
                 "os_release": system_info.os_release,
                 "machine": system_info.machine,
                 "processor": system_info.processor,
                 "cpu_model": system_info.cpu_model,
+                "n_paths": n_paths,
+                "warmup_runs": WARMUP_RUNS,
+                "repetitions": REPETITIONS,
+                "median_ms": median_ms,
+                "min_ms": min_ms,
+                "max_ms": max_ms,
+                "throughput_paths_per_sec": throughput,
+                "estimated_price": result.price,
+                "reference_price": reference_price,
+                "absolute_error": absolute_error,
+                "standard_error": result.standard_error,
+                "seed": seed,
             }
         )
 
-    save_results(rows)
+    return rows
 
 
-def save_results(rows: list[dict[str, str | int | float]]) -> None:
-    """Append benchmark rows to the CSV results file."""
+def save_results(
+    rows: list[dict[str, str | int | float]],
+) -> None:
+    """Append benchmark results to the versioned CSV output."""
+    if not rows:
+        raise ValueError("rows must not be empty")
+
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
     file_exists = RESULTS_FILE.exists()
 
-    with RESULTS_FILE.open("a", newline="", encoding="utf-8") as file:
+    with RESULTS_FILE.open(
+        "a",
+        newline="",
+        encoding="utf-8",
+    ) as file:
         writer = csv.DictWriter(
             file,
             fieldnames=list(rows[0].keys()),
@@ -137,6 +158,12 @@ def save_results(rows: list[dict[str, str | int | float]]) -> None:
         writer.writerows(rows)
 
     print(f"\nSaved benchmark results to {RESULTS_FILE}")
+
+
+def main() -> None:
+    """Run the benchmark suite and persist its results."""
+    rows = run_benchmark()
+    save_results(rows)
 
 
 if __name__ == "__main__":
