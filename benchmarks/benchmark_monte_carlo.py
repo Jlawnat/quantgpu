@@ -1,8 +1,19 @@
 from __future__ import annotations
 
+import csv
+import platform
+from datetime import UTC, datetime
+from pathlib import Path
+
+import numpy as np
+
 from quantgpu.benchmarking.timer import benchmark_callable
 from quantgpu.pricing.black_scholes import black_scholes_call
 from quantgpu.pricing.monte_carlo import price_european_call_mc
+
+
+RESULTS_DIR = Path("benchmarks/results")
+RESULTS_FILE = RESULTS_DIR / "monte_carlo_numpy.csv"
 
 
 def main() -> None:
@@ -28,6 +39,8 @@ def main() -> None:
         1_000_000,
     ]
 
+    rows: list[dict[str, str | int | float]] = []
+
     print(
         f"{'paths':>12} "
         f"{'median_ms':>12} "
@@ -36,6 +49,7 @@ def main() -> None:
     )
 
     for n_paths in path_counts:
+
         def workload() -> None:
             price_european_call_mc(
                 spot=spot,
@@ -73,6 +87,50 @@ def main() -> None:
             f"{throughput:15,.0f} "
             f"{absolute_error:12.6f}"
         )
+
+        rows.append(
+            {
+                "timestamp_utc": datetime.now(UTC).isoformat(),
+                "backend": "numpy",
+                "device": "cpu",
+                "python_version": platform.python_version(),
+                "numpy_version": np.__version__,
+                "n_paths": n_paths,
+                "warmup_runs": 1,
+                "repetitions": 5,
+                "median_ms": median_ms,
+                "min_ms": timing.min_seconds * 1_000.0,
+                "max_ms": timing.max_seconds * 1_000.0,
+                "throughput_paths_per_sec": throughput,
+                "estimated_price": result.price,
+                "reference_price": reference,
+                "absolute_error": absolute_error,
+                "standard_error": result.standard_error,
+                "seed": seed,
+            }
+        )
+
+    save_results(rows)
+
+
+def save_results(rows: list[dict[str, str | int | float]]) -> None:
+    """Append benchmark rows to the CSV results file."""
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+
+    file_exists = RESULTS_FILE.exists()
+
+    with RESULTS_FILE.open("a", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(
+            file,
+            fieldnames=list(rows[0].keys()),
+        )
+
+        if not file_exists:
+            writer.writeheader()
+
+        writer.writerows(rows)
+
+    print(f"\nSaved benchmark results to {RESULTS_FILE}")
 
 
 if __name__ == "__main__":
