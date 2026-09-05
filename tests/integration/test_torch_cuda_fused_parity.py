@@ -5,6 +5,7 @@ from quantgpu.backends.torch_cuda_fused import (
     price_european_call_torch_cuda_fused,
 )
 from quantgpu.pricing.black_scholes import black_scholes_call
+from quantgpu.validation.tolerances import monte_carlo_tolerance
 
 pytestmark = pytest.mark.skipif(
     not torch.cuda.is_available(),
@@ -32,7 +33,10 @@ def test_fused_cuda_matches_black_scholes() -> None:
         volatility=0.20,
     )
 
-    assert result.price == pytest.approx(reference, abs=0.08)
+    assert result.price == pytest.approx(
+        reference,
+        abs=monte_carlo_tolerance(result.standard_error),
+    )
 
 
 def test_fused_cuda_reproducible() -> None:

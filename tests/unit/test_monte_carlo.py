@@ -2,7 +2,7 @@ import pytest
 
 from quantgpu.pricing.black_scholes import black_scholes_call
 from quantgpu.pricing.monte_carlo import price_european_call_mc
-
+from quantgpu.validation.tolerances import monte_carlo_tolerance
 
 def test_monte_carlo_price_matches_black_scholes() -> None:
     result = price_european_call_mc(
@@ -23,7 +23,10 @@ def test_monte_carlo_price_matches_black_scholes() -> None:
         volatility=0.20,
     )
 
-    assert result.price == pytest.approx(reference, abs=0.08)
+    assert result.price == pytest.approx(
+        reference,
+        rel=monte_carlo_tolerance(result.standard_error),   
+    )
 
 
 def test_monte_carlo_result_reports_standard_error() -> None:
