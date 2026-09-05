@@ -17,6 +17,7 @@ from quantgpu.benchmarking.cuda_timer import benchmark_cuda_callable
 from quantgpu.benchmarking.schema import BENCHMARK_SCHEMA_VERSION
 from quantgpu.benchmarking.system_info import get_system_info
 from quantgpu.benchmarking.timer import benchmark_callable
+from quantgpu.benchmarking.validation import require_valid_result
 from quantgpu.pricing.black_scholes import black_scholes_call
 
 RESULTS_DIR = Path("benchmarks/results")
@@ -88,6 +89,8 @@ def benchmark_cpu_backend(
         seed=int(params["seed"]),
     )
 
+    require_valid_result(result, reference_price)
+
     system_info = get_system_info()
 
     median_ms = timing.median_seconds * 1_000.0
@@ -128,7 +131,7 @@ def benchmark_cuda_backend(
     n_paths: int,
     reference_price: float,
 ) -> dict[str, str | int | float]:
-    """Benchmark PyTorch CUDA using both device and end-to-end timing."""
+    """Benchmark PyTorch CUDA using device and end-to-end timing."""
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is not available")
 
@@ -178,8 +181,9 @@ def benchmark_cuda_backend(
         seed=int(params["seed"]),
     )
 
-    system_info = get_system_info()
+    require_valid_result(result, reference_price)
 
+    system_info = get_system_info()
     gpu_name = torch.cuda.get_device_name(0)
 
     return {
@@ -218,7 +222,7 @@ def benchmark_cuda_backend(
 def add_speedups(
     rows: list[dict[str, str | int | float]],
 ) -> None:
-    """Add speedups versus NumPy and PyTorch CPU for each path count."""
+    """Add speedups versus NumPy and PyTorch CPU."""
     for n_paths in PATH_COUNTS:
         matching = [
             row
@@ -229,6 +233,7 @@ def add_speedups(
         numpy_row = next(
             row for row in matching if row["backend"] == "numpy_cpu"
         )
+
         torch_cpu_row = next(
             row for row in matching if row["backend"] == "torch_cpu"
         )
@@ -251,6 +256,7 @@ def save_results(
         raise ValueError("rows must not be empty")
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+
     file_exists = RESULTS_FILE.exists()
 
     with RESULTS_FILE.open(
