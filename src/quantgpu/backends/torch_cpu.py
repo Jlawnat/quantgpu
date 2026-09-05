@@ -5,6 +5,8 @@ from math import exp, sqrt
 
 import torch
 
+from quantgpu.backends.protocol import PricingResult
+
 
 @dataclass(frozen=True)
 class TorchMonteCarloResult:
@@ -75,7 +77,7 @@ def price_european_call_torch_cpu(
     n_paths: int,
     seed: int | None = None,
     dtype: torch.dtype = torch.float64,
-) -> TorchMonteCarloResult:
+) -> PricingResult:
     """Price a European call using PyTorch CPU Monte Carlo."""
     if strike <= 0:
         raise ValueError("strike must be positive")
@@ -109,7 +111,7 @@ def price_european_call_torch_cpu(
             ).item()
         )
 
-    return TorchMonteCarloResult(
+    return PricingResult(
         price=price,
         standard_error=standard_error,
         n_paths=n_paths,

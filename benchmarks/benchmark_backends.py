@@ -5,12 +5,13 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
+from quantgpu.backends.numpy_cpu import price_european_call_numpy_cpu
+from quantgpu.backends.protocol import PricingResult
 from quantgpu.backends.torch_cpu import price_european_call_torch_cpu
 from quantgpu.benchmarking.schema import BENCHMARK_SCHEMA_VERSION
 from quantgpu.benchmarking.system_info import get_system_info
 from quantgpu.benchmarking.timer import benchmark_callable
 from quantgpu.pricing.black_scholes import black_scholes_call
-from quantgpu.pricing.monte_carlo import price_european_call_mc
 
 RESULTS_DIR = Path("benchmarks/results")
 RESULTS_FILE = RESULTS_DIR / "backend_comparison_v1.csv"
@@ -24,59 +25,18 @@ PATH_COUNTS = [
     1_000_000,
 ]
 
+BackendFunction = Callable[..., PricingResult]
 
-def run_numpy(
-    *,
-    spot: float,
-    strike: float,
-    maturity: float,
-    rate: float,
-    volatility: float,
-    n_paths: int,
-    seed: int,
-) -> tuple[float, float]:
-    """Run the NumPy Monte Carlo backend."""
-    result = price_european_call_mc(
-        spot=spot,
-        strike=strike,
-        maturity=maturity,
-        rate=rate,
-        volatility=volatility,
-        n_paths=n_paths,
-        seed=seed,
-    )
-
-    return result.price, result.standard_error
-
-
-def run_torch_cpu(
-    *,
-    spot: float,
-    strike: float,
-    maturity: float,
-    rate: float,
-    volatility: float,
-    n_paths: int,
-    seed: int,
-) -> tuple[float, float]:
-    """Run the PyTorch CPU Monte Carlo backend."""
-    result = price_european_call_torch_cpu(
-        spot=spot,
-        strike=strike,
-        maturity=maturity,
-        rate=rate,
-        volatility=volatility,
-        n_paths=n_paths,
-        seed=seed,
-    )
-
-    return result.price, result.standard_error
+BACKENDS: dict[str, BackendFunction] = {
+    "numpy_cpu": price_european_call_numpy_cpu,
+    "torch_cpu": price_european_call_torch_cpu,
+}
 
 
 def benchmark_backend(
     *,
     backend_name: str,
-    backend_function: Callable[..., tuple[float, float]],
+    backend_function: BackendFunction,
     spot: float,
     strike: float,
     maturity: float,
@@ -86,7 +46,7 @@ def benchmark_backend(
     seed: int,
     reference_price: float,
 ) -> dict[str, str | int | float]:
-    """Benchmark one backend for one workload size."""
+    """Benchmark one pricing backend for one workload size."""
 
     def workload() -> None:
         backend_function(
@@ -105,7 +65,7 @@ def benchmark_backend(
         repetitions=REPETITIONS,
     )
 
-    estimated_price, standard_error = backend_function(
+    result = backend_function(
         spot=spot,
         strike=strike,
         maturity=maturity,
@@ -117,7 +77,7 @@ def benchmark_backend(
 
     median_ms = timing.median_seconds * 1_000.0
     throughput = n_paths / timing.median_seconds
-    absolute_error = abs(estimated_price - reference_price)
+    absolute_error = abs(result.price - reference_price)
 
     system_info = get_system_info()
 
@@ -139,10 +99,10 @@ def benchmark_backend(
         "min_ms": timing.min_seconds * 1_000.0,
         "max_ms": timing.max_seconds * 1_000.0,
         "throughput_paths_per_sec": throughput,
-        "estimated_price": estimated_price,
+        "estimated_price": result.price,
         "reference_price": reference_price,
         "absolute_error": absolute_error,
-        "standard_error": standard_error,
+        "standard_error": result.standard_error,
         "seed": seed,
     }
 
@@ -150,7 +110,7 @@ def benchmark_backend(
 def save_results(
     rows: list[dict[str, str | int | float]],
 ) -> None:
-    """Append comparison benchmark results to CSV."""
+    """Append backend comparison results to CSV."""
     if not rows:
         raise ValueError("rows must not be empty")
 
@@ -175,7 +135,7 @@ def save_results(
 
 
 def main() -> None:
-    """Compare NumPy and PyTorch CPU Monte Carlo backends."""
+    """Benchmark all registered CPU pricing backends."""
     spot = 100.0
     strike = 100.0
     maturity = 1.0
@@ -191,13 +151,6 @@ def main() -> None:
         volatility=volatility,
     )
 
-    backends: list[
-        tuple[str, Callable[..., tuple[float, float]]]
-    ] = [
-        ("numpy", run_numpy),
-        ("torch_cpu", run_torch_cpu),
-    ]
-
     rows: list[dict[str, str | int | float]] = []
 
     print(
@@ -208,7 +161,7 @@ def main() -> None:
         f"{'abs_error':>12}"
     )
 
-    for backend_name, backend_function in backends:
+    for backend_name, backend_function in BACKENDS.items():
         for n_paths in PATH_COUNTS:
             row = benchmark_backend(
                 backend_name=backend_name,
