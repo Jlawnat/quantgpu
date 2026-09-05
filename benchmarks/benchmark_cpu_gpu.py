@@ -4,6 +4,9 @@ import csv
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
+from time import perf_counter
+
+import torch
 
 from quantgpu.backends.numpy_cpu import price_european_call_numpy_cpu
 from quantgpu.backends.protocol import PricingResult
@@ -16,7 +19,7 @@ from quantgpu.benchmarking.timer import benchmark_callable
 from quantgpu.pricing.black_scholes import black_scholes_call
 
 RESULTS_DIR = Path("benchmarks/results")
-RESULTS_FILE = RESULTS_DIR / "cpu_gpu_comparison_v1.csv"
+RESULTS_FILE = RESULTS_DIR / "cpu_gpu_comparison_v2.csv"
 
 CPU_WARMUP_RUNS = 1
 CPU_REPETITIONS = 5
@@ -35,6 +38,18 @@ PATH_COUNTS = [
 BackendFunction = Callable[..., PricingResult]
 
 
+def _common_parameters() -> dict[str, float | int]:
+    """Return the canonical benchmark workload parameters."""
+    return {
+        "spot": 100.0,
+        "strike": 100.0,
+        "maturity": 1.0,
+        "rate": 0.05,
+        "volatility": 0.20,
+        "seed": 42,
+    }
+
+
 def benchmark_cpu_backend(
     *,
     backend_name: str,
@@ -42,23 +57,18 @@ def benchmark_cpu_backend(
     n_paths: int,
     reference_price: float,
 ) -> dict[str, str | int | float]:
-    """Benchmark a CPU pricing backend."""
-    spot = 100.0
-    strike = 100.0
-    maturity = 1.0
-    rate = 0.05
-    volatility = 0.20
-    seed = 42
+    """Benchmark one CPU pricing backend."""
+    params = _common_parameters()
 
     def workload() -> None:
         backend_function(
-            spot=spot,
-            strike=strike,
-            maturity=maturity,
-            rate=rate,
-            volatility=volatility,
+            spot=float(params["spot"]),
+            strike=float(params["strike"]),
+            maturity=float(params["maturity"]),
+            rate=float(params["rate"]),
+            volatility=float(params["volatility"]),
             n_paths=n_paths,
-            seed=seed,
+            seed=int(params["seed"]),
         )
 
     timing = benchmark_callable(
@@ -68,23 +78,29 @@ def benchmark_cpu_backend(
     )
 
     result = backend_function(
-        spot=spot,
-        strike=strike,
-        maturity=maturity,
-        rate=rate,
-        volatility=volatility,
+        spot=float(params["spot"]),
+        strike=float(params["strike"]),
+        maturity=float(params["maturity"]),
+        rate=float(params["rate"]),
+        volatility=float(params["volatility"]),
         n_paths=n_paths,
-        seed=seed,
+        seed=int(params["seed"]),
     )
 
     system_info = get_system_info()
+
+    median_ms = timing.median_seconds * 1_000.0
 
     return {
         "schema_version": BENCHMARK_SCHEMA_VERSION,
         "timestamp_utc": datetime.now(UTC).isoformat(),
         "backend": backend_name,
         "device": "cpu",
+        "dtype": "float64",
         "python_version": system_info.python_version,
+        "torch_version": torch.__version__,
+        "cuda_version": torch.version.cuda or "none",
+        "gpu_name": "none",
         "os": system_info.os,
         "os_release": system_info.os_release,
         "machine": system_info.machine,
@@ -93,7 +109,8 @@ def benchmark_cpu_backend(
         "n_paths": n_paths,
         "warmup_runs": CPU_WARMUP_RUNS,
         "repetitions": CPU_REPETITIONS,
-        "median_ms": timing.median_seconds * 1_000.0,
+        "device_median_ms": median_ms,
+        "end_to_end_median_ms": median_ms,
         "min_ms": timing.min_seconds * 1_000.0,
         "max_ms": timing.max_seconds * 1_000.0,
         "throughput_paths_per_sec": n_paths / timing.median_seconds,
@@ -101,7 +118,7 @@ def benchmark_cpu_backend(
         "reference_price": reference_price,
         "absolute_error": abs(result.price - reference_price),
         "standard_error": result.standard_error,
-        "seed": seed,
+        "seed": int(params["seed"]),
     }
 
 
@@ -110,49 +127,71 @@ def benchmark_cuda_backend(
     n_paths: int,
     reference_price: float,
 ) -> dict[str, str | int | float]:
-    """Benchmark the PyTorch CUDA pricing backend."""
-    spot = 100.0
-    strike = 100.0
-    maturity = 1.0
-    rate = 0.05
-    volatility = 0.20
-    seed = 42
+    """Benchmark PyTorch CUDA using both device and end-to-end timing."""
+    if not torch.cuda.is_available():
+        raise RuntimeError("CUDA is not available")
+
+    params = _common_parameters()
 
     def workload() -> None:
         price_european_call_torch_cuda(
-            spot=spot,
-            strike=strike,
-            maturity=maturity,
-            rate=rate,
-            volatility=volatility,
+            spot=float(params["spot"]),
+            strike=float(params["strike"]),
+            maturity=float(params["maturity"]),
+            rate=float(params["rate"]),
+            volatility=float(params["volatility"]),
             n_paths=n_paths,
-            seed=seed,
+            seed=int(params["seed"]),
         )
 
-    timing = benchmark_cuda_callable(
+    device_timing = benchmark_cuda_callable(
         workload,
         warmup_runs=CUDA_WARMUP_RUNS,
         repetitions=CUDA_REPETITIONS,
     )
 
+    for _ in range(CUDA_WARMUP_RUNS):
+        workload()
+
+    torch.cuda.synchronize()
+
+    wall_times: list[float] = []
+
+    for _ in range(CUDA_REPETITIONS):
+        start = perf_counter()
+
+        workload()
+        torch.cuda.synchronize()
+
+        wall_times.append(perf_counter() - start)
+
+    wall_times.sort()
+    wall_median_seconds = wall_times[len(wall_times) // 2]
+
     result = price_european_call_torch_cuda(
-        spot=spot,
-        strike=strike,
-        maturity=maturity,
-        rate=rate,
-        volatility=volatility,
+        spot=float(params["spot"]),
+        strike=float(params["strike"]),
+        maturity=float(params["maturity"]),
+        rate=float(params["rate"]),
+        volatility=float(params["volatility"]),
         n_paths=n_paths,
-        seed=seed,
+        seed=int(params["seed"]),
     )
 
     system_info = get_system_info()
+
+    gpu_name = torch.cuda.get_device_name(0)
 
     return {
         "schema_version": BENCHMARK_SCHEMA_VERSION,
         "timestamp_utc": datetime.now(UTC).isoformat(),
         "backend": "torch_cuda",
         "device": "cuda",
+        "dtype": "float64",
         "python_version": system_info.python_version,
+        "torch_version": torch.__version__,
+        "cuda_version": torch.version.cuda or "unknown",
+        "gpu_name": gpu_name,
         "os": system_info.os,
         "os_release": system_info.os_release,
         "machine": system_info.machine,
@@ -161,22 +200,53 @@ def benchmark_cuda_backend(
         "n_paths": n_paths,
         "warmup_runs": CUDA_WARMUP_RUNS,
         "repetitions": CUDA_REPETITIONS,
-        "median_ms": timing.median_seconds * 1_000.0,
-        "min_ms": timing.min_seconds * 1_000.0,
-        "max_ms": timing.max_seconds * 1_000.0,
-        "throughput_paths_per_sec": n_paths / timing.median_seconds,
+        "device_median_ms": device_timing.median_seconds * 1_000.0,
+        "end_to_end_median_ms": wall_median_seconds * 1_000.0,
+        "min_ms": device_timing.min_seconds * 1_000.0,
+        "max_ms": device_timing.max_seconds * 1_000.0,
+        "throughput_paths_per_sec": (
+            n_paths / device_timing.median_seconds
+        ),
         "estimated_price": result.price,
         "reference_price": reference_price,
         "absolute_error": abs(result.price - reference_price),
         "standard_error": result.standard_error,
-        "seed": seed,
+        "seed": int(params["seed"]),
     }
+
+
+def add_speedups(
+    rows: list[dict[str, str | int | float]],
+) -> None:
+    """Add speedups versus NumPy and PyTorch CPU for each path count."""
+    for n_paths in PATH_COUNTS:
+        matching = [
+            row
+            for row in rows
+            if int(row["n_paths"]) == n_paths
+        ]
+
+        numpy_row = next(
+            row for row in matching if row["backend"] == "numpy_cpu"
+        )
+        torch_cpu_row = next(
+            row for row in matching if row["backend"] == "torch_cpu"
+        )
+
+        numpy_ms = float(numpy_row["end_to_end_median_ms"])
+        torch_cpu_ms = float(torch_cpu_row["end_to_end_median_ms"])
+
+        for row in matching:
+            row_ms = float(row["end_to_end_median_ms"])
+
+            row["speedup_vs_numpy"] = numpy_ms / row_ms
+            row["speedup_vs_torch_cpu"] = torch_cpu_ms / row_ms
 
 
 def save_results(
     rows: list[dict[str, str | int | float]],
 ) -> None:
-    """Append CPU/GPU benchmark rows to CSV."""
+    """Append benchmark rows to the versioned CSV."""
     if not rows:
         raise ValueError("rows must not be empty")
 
@@ -201,23 +271,17 @@ def save_results(
 
 def main() -> None:
     """Benchmark NumPy CPU, PyTorch CPU, and PyTorch CUDA."""
+    params = _common_parameters()
+
     reference_price = black_scholes_call(
-        spot=100.0,
-        strike=100.0,
-        maturity=1.0,
-        rate=0.05,
-        volatility=0.20,
+        spot=float(params["spot"]),
+        strike=float(params["strike"]),
+        maturity=float(params["maturity"]),
+        rate=float(params["rate"]),
+        volatility=float(params["volatility"]),
     )
 
     rows: list[dict[str, str | int | float]] = []
-
-    print(
-        f"{'backend':>12} "
-        f"{'paths':>12} "
-        f"{'median_ms':>12} "
-        f"{'paths/sec':>15} "
-        f"{'abs_error':>12}"
-    )
 
     cpu_backends: dict[str, BackendFunction] = {
         "numpy_cpu": price_european_call_numpy_cpu,
@@ -226,37 +290,42 @@ def main() -> None:
 
     for backend_name, backend_function in cpu_backends.items():
         for n_paths in PATH_COUNTS:
-            row = benchmark_cpu_backend(
-                backend_name=backend_name,
-                backend_function=backend_function,
-                n_paths=n_paths,
-                reference_price=reference_price,
-            )
-
-            rows.append(row)
-
-            print(
-                f"{backend_name:>12} "
-                f"{n_paths:12,d} "
-                f"{float(row['median_ms']):12.3f} "
-                f"{float(row['throughput_paths_per_sec']):15,.0f} "
-                f"{float(row['absolute_error']):12.6f}"
+            rows.append(
+                benchmark_cpu_backend(
+                    backend_name=backend_name,
+                    backend_function=backend_function,
+                    n_paths=n_paths,
+                    reference_price=reference_price,
+                )
             )
 
     for n_paths in PATH_COUNTS:
-        row = benchmark_cuda_backend(
-            n_paths=n_paths,
-            reference_price=reference_price,
+        rows.append(
+            benchmark_cuda_backend(
+                n_paths=n_paths,
+                reference_price=reference_price,
+            )
         )
 
-        rows.append(row)
+    add_speedups(rows)
 
+    print(
+        f"{'backend':>12} "
+        f"{'paths':>12} "
+        f"{'device_ms':>12} "
+        f"{'e2e_ms':>12} "
+        f"{'vs_numpy':>10} "
+        f"{'vs_torch':>10}"
+    )
+
+    for row in rows:
         print(
-            f"{'torch_cuda':>12} "
-            f"{n_paths:12,d} "
-            f"{float(row['median_ms']):12.3f} "
-            f"{float(row['throughput_paths_per_sec']):15,.0f} "
-            f"{float(row['absolute_error']):12.6f}"
+            f"{str(row['backend']):>12} "
+            f"{int(row['n_paths']):12,d} "
+            f"{float(row['device_median_ms']):12.3f} "
+            f"{float(row['end_to_end_median_ms']):12.3f} "
+            f"{float(row['speedup_vs_numpy']):10.2f} "
+            f"{float(row['speedup_vs_torch_cpu']):10.2f}"
         )
 
     save_results(rows)
