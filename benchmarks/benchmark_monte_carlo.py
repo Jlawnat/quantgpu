@@ -10,7 +10,7 @@ import numpy as np
 from quantgpu.benchmarking.timer import benchmark_callable
 from quantgpu.pricing.black_scholes import black_scholes_call
 from quantgpu.pricing.monte_carlo import price_european_call_mc
-
+from quantgpu.benchmarking.system_info import get_system_info
 
 RESULTS_DIR = Path("benchmarks/results")
 RESULTS_FILE = RESULTS_DIR / "monte_carlo_numpy.csv"
@@ -24,6 +24,7 @@ def main() -> None:
     rate = 0.05
     volatility = 0.20
     seed = 42
+    system_info = get_system_info()
 
     reference = black_scholes_call(
         spot=spot,
@@ -107,6 +108,11 @@ def main() -> None:
                 "absolute_error": absolute_error,
                 "standard_error": result.standard_error,
                 "seed": seed,
+                "os": system_info.os,
+                "os_release": system_info.os_release,
+                "machine": system_info.machine,
+                "processor": system_info.processor,
+                "cpu_model": system_info.cpu_model,
             }
         )
 
