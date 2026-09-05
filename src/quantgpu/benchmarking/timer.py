@@ -4,9 +4,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from statistics import median
 from time import perf_counter
-from typing import TypeVar
-
-T = TypeVar("T")
 
 
 @dataclass(frozen=True)
@@ -19,7 +16,7 @@ class TimingResult:
     repetitions: int
 
 
-def benchmark_callable(
+def benchmark_callable[T](
     function: Callable[[], T],
     *,
     warmup_runs: int = 1,

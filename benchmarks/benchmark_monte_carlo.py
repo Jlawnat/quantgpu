@@ -12,7 +12,6 @@ from quantgpu.benchmarking.timer import benchmark_callable
 from quantgpu.pricing.black_scholes import black_scholes_call
 from quantgpu.pricing.monte_carlo import price_european_call_mc
 
-
 RESULTS_DIR = Path("benchmarks/results")
 RESULTS_FILE = RESULTS_DIR / "monte_carlo_numpy_v1.csv"
 
@@ -59,7 +58,7 @@ def run_benchmark() -> list[dict[str, str | int | float]]:
 
     for n_paths in PATH_COUNTS:
 
-        def workload() -> None:
+        def workload(n_paths: int = n_paths) -> None:
             price_european_call_mc(
                 spot=spot,
                 strike=strike,
