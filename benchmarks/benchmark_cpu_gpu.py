@@ -4,6 +4,7 @@ import csv
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
+from statistics import median
 from time import perf_counter
 
 import torch
@@ -165,8 +166,7 @@ def benchmark_cuda_backend(
 
         wall_times.append(perf_counter() - start)
 
-    wall_times.sort()
-    wall_median_seconds = wall_times[len(wall_times) // 2]
+    wall_median_seconds = median(wall_times)
 
     result = price_european_call_torch_cuda(
         spot=float(params["spot"]),
