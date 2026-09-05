@@ -13,7 +13,9 @@ authors = [
     { name = "Elliot Young" }
 ]
 
-dependencies = []
+dependencies = [
+    "numpy>=2.0",
+]
 
 [project.optional-dependencies]
 dev = [
