@@ -23,6 +23,8 @@ PATH_COUNTS = [
     10_000,
     100_000,
     1_000_000,
+    5_000_000,
+    10_000_000,
 ]
 
 BackendFunction = Callable[..., PricingResult]
