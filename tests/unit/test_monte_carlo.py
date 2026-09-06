@@ -66,3 +66,32 @@ def test_monte_carlo_is_reproducible_with_same_seed() -> None:
     )
 
     assert first == second
+def test_monte_carlo_rejects_invalid_strike() -> None:
+    with pytest.raises(
+        ValueError,
+        match="strike must be positive",
+    ):
+        price_european_call_mc(
+            spot=100.0,
+            strike=0.0,
+            maturity=1.0,
+            rate=0.05,
+            volatility=0.20,
+            n_paths=100,
+            seed=42,
+        )
+
+
+def test_monte_carlo_single_path_has_zero_standard_error() -> None:
+    result = price_european_call_mc(
+        spot=100.0,
+        strike=100.0,
+        maturity=1.0,
+        rate=0.05,
+        volatility=0.20,
+        n_paths=1,
+        seed=42,
+    )
+
+    assert result.standard_error == 0.0
+    assert result.n_paths == 1

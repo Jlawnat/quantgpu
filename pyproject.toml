@@ -34,6 +34,28 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+markers = [
+    "unit: fast isolated unit tests",
+    "integration: tests across multiple QuantGPU components or backends",
+    "numerical: statistical and numerical correctness tests",
+    "gpu: tests requiring an NVIDIA CUDA-capable GPU",
+    "slow: tests intentionally excluded from the fast development loop",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["quantgpu"]
+omit = [
+    "src/quantgpu/backends/torch_cuda.py",
+    "src/quantgpu/backends/torch_cuda_fused.py",
+    "src/quantgpu/backends/torch_cuda_compiled.py",
+    "src/quantgpu/backends/triton_cuda.py",
+    "src/quantgpu/benchmarking/cuda_timer.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
 
 [tool.ruff]
 line-length = 88

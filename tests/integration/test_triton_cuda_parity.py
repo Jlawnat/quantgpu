@@ -1,6 +1,9 @@
 import pytest
 import torch
-
+pytest.importorskip(
+    "triton",
+    reason="Triton is not installed",
+)
 from quantgpu.backends.triton_cuda import (
     price_european_call_triton_cuda,
 )
@@ -8,11 +11,13 @@ from quantgpu.pricing.black_scholes import black_scholes_call
 from quantgpu.validation.tolerances import monte_carlo_tolerance
 
 
-pytestmark = pytest.mark.skipif(
-    not torch.cuda.is_available(),
-    reason="CUDA is not available",
-)
-
+pytestmark = [
+    pytest.mark.gpu,
+    pytest.mark.skipif(
+        not torch.cuda.is_available(),
+        reason="CUDA is not available",
+    ),
+]
 
 def test_triton_cuda_matches_black_scholes() -> None:
     result = price_european_call_triton_cuda(

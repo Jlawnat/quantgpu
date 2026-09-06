@@ -67,3 +67,13 @@ def test_combined_tolerance_rejects_negative_standard_error(
             first_standard_error,
             second_standard_error,
         )
+def test_combined_tolerance_rejects_non_positive_z_score() -> None:
+    with pytest.raises(
+        ValueError,
+        match="z_score must be positive",
+    ):
+        combined_monte_carlo_tolerance(
+            0.01,
+            0.02,
+            z_score=0.0,
+        )
