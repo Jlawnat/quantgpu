@@ -92,11 +92,15 @@ PyTorch remained responsible for Gaussian random-number generation,
 while the custom kernel avoided materializing the full payoff pipeline
 as separate tensors.
 
-Final latency:
+Final end-to-end latency:
 
 - 0.683 ms
 
-Final throughput:
+Final device latency:
+
+- 0.674 ms
+
+Final device throughput:
 
 - approximately 14.83 billion paths per second
 

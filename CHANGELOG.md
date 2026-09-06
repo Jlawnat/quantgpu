@@ -4,7 +4,7 @@ All notable changes to QuantGPU are documented in this file.
 
 The project follows semantic versioning for public releases.
 
-## [0.1.0] - Unreleased
+## [0.1.0] - 2026-09-06
 
 Initial public release of QuantGPU.
 
@@ -43,11 +43,11 @@ Initial public release of QuantGPU.
 
 Canonical Tesla T4 European-call Monte Carlo workload at 10 million paths:
 
-- NumPy CPU: approximately 341 ms.
-- PyTorch CPU: approximately 571 ms.
+- NumPy CPU: approximately 368 ms.
+- PyTorch CPU: approximately 639 ms.
 - PyTorch CUDA FP64: approximately 10.7 ms end-to-end.
 - PyTorch CUDA FP32: approximately 3.08 ms.
-- Selected Triton CUDA FP32 kernel: approximately 0.683 ms device time.
+- Selected Triton CUDA FP32: approximately 0.683 ms end-to-end and 0.674 ms device time.
 - Triton throughput: approximately 14.8 billion paths per second.
 - Triton CUDA FP32 achieved approximately 2.1× speedup over compiled PyTorch FP32.
 - Triton CUDA FP32 achieved approximately 4.5× speedup over eager PyTorch FP32.
