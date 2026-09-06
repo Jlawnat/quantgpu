@@ -27,6 +27,11 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+
 # Temporary files
 *.log
 *.tmp
@@ -34,3 +39,6 @@ Thumbs.db
 # Benchmark/profiling scratch outputs
 benchmarks/results/raw/
 profiles/
+*.prof
+*.nsys-rep
+*.qdrep
