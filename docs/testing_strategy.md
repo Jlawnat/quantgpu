@@ -145,13 +145,39 @@ because they cannot be meaningfully exercised without CUDA hardware.
 
 ## 5. Static quality gates
 
-Ruff:
+QuantGPU uses automated static quality gates to keep the Python codebase
+consistent and reviewable.
+
+### Ruff formatting
+
+Canonical formatting is enforced with:
 
 ```bash
-ruff check src tests
+ruff format --check src tests benchmarks
 ```
 
-Strict mypy:
+This checks that production code, tests, and benchmark scripts all conform to
+the project formatter without modifying files.
+
+### Ruff linting
+
+Linting is enforced with:
+
+```bash
+ruff check src tests benchmarks
+```
+
+The configured lint rules cover:
+
+- Python errors,
+- import ordering,
+- style issues,
+- Python-version modernization,
+- common bug patterns.
+
+### Strict mypy
+
+Static type checking is enforced with:
 
 ```bash
 mypy src
@@ -162,6 +188,17 @@ Strict typing is applied across the normal Python implementation.
 The Triton backend has narrowly scoped mypy exceptions for limitations in the
 Triton JIT DSL. These exceptions do not disable type checking for the rest of
 QuantGPU.
+
+### Benchmark syntax validation
+
+Benchmark entry points are syntax-checked with:
+
+```bash
+python -m compileall -q benchmarks
+```
+
+This ensures benchmark, experiment, and profiling scripts remain valid Python
+even when they are not executed in the local CPU environment.
 
 ---
 
@@ -181,15 +218,20 @@ The CPU quality gate performs:
 2. Python 3.12 setup,
 3. CPU PyTorch installation,
 4. development dependency installation,
-5. Ruff,
-6. strict mypy,
-7. CPU pytest execution,
-8. CPU coverage validation.
+5. Ruff formatting validation,
+6. Ruff linting,
+7. strict mypy,
+8. benchmark syntax validation,
+9. CPU pytest execution,
+10. CPU coverage validation.
 
 The CI coverage floor is 95%.
 
-GPU tests are not executed on standard hosted GitHub Actions runners because
-they do not provide the canonical NVIDIA GPU environment.
+The CI test command excludes GPU-marked tests because standard hosted GitHub
+Actions runners do not provide the canonical NVIDIA GPU environment.
+
+GPU correctness is therefore validated separately using the documented Tesla T4
+workflow.
 
 ---
 
@@ -229,7 +271,10 @@ Validated GPU quality-gate result:
 
 ```text
 14 passed
+```
 
+The number of deselected CPU tests may increase as the CPU test suite grows,
+so only the GPU pass count is treated as the stable validation result.
 
 PyTorch JIT deprecation warnings observed in this environment are warnings,
 not correctness failures.

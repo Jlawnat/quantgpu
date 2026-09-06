@@ -32,10 +32,10 @@ dev = [
 where = ["src"]
 [tool.setuptools.dynamic]
 version = { attr = "quantgpu.__version__" }
-
+addopts = "-ra --strict-markers"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra"
+
 markers = [
     "unit: fast isolated unit tests",
     "integration: tests across multiple QuantGPU components or backends",
