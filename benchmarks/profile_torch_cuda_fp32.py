@@ -124,14 +124,7 @@ def main() -> None:
     mean_ms = time_cuda_stage(mean_stage)
     std_ms = time_cuda_stage(std_stage)
 
-    total_component_ms = (
-        rng_ms
-        + gbm_ms
-        + payoff_ms
-        + discount_ms
-        + mean_ms
-        + std_ms
-    )
+    total_component_ms = rng_ms + gbm_ms + payoff_ms + discount_ms + mean_ms + std_ms
 
     print(f"GPU: {torch.cuda.get_device_name(0)}")
     print(f"Paths: {N_PATHS:,}")
@@ -150,22 +143,13 @@ def main() -> None:
 
     for name, timing_ms in stages:
         share = (
-            timing_ms / total_component_ms * 100.0
-            if total_component_ms > 0
-            else 0.0
+            timing_ms / total_component_ms * 100.0 if total_component_ms > 0 else 0.0
         )
 
-        print(
-            f"{name:<20} "
-            f"{timing_ms:12.3f} "
-            f"{share:10.2f}"
-        )
+        print(f"{name:<20} {timing_ms:12.3f} {share:10.2f}")
 
     print()
-    print(
-        f"{'component_sum':<20} "
-        f"{total_component_ms:12.3f}"
-    )
+    print(f"{'component_sum':<20} {total_component_ms:12.3f}")
 
 
 if __name__ == "__main__":

@@ -50,9 +50,7 @@ def price_european_call_mc(
     if n_paths == 1:
         standard_error = 0.0
     else:
-        standard_error = float(
-            np.std(discounted_payoffs, ddof=1) / sqrt(n_paths)
-        )
+        standard_error = float(np.std(discounted_payoffs, ddof=1) / sqrt(n_paths))
 
     return MonteCarloResult(
         price=price,

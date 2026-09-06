@@ -45,7 +45,7 @@ def benchmark_cuda_callable[T](
     for _ in range(repetitions):
         start = event_factory(enable_timing=True)
         end = event_factory(enable_timing=True)
-        
+
         start.record()
         function()
         end.record()

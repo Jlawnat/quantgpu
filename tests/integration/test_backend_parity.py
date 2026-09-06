@@ -38,6 +38,7 @@ def test_numpy_and_torch_cpu_are_statistically_consistent() -> None:
 
     assert comparison.within_tolerance
 
+
 @pytest.mark.gpu
 @pytest.mark.skipif(
     not torch.cuda.is_available(),
@@ -71,6 +72,7 @@ def test_numpy_and_torch_cuda_are_statistically_consistent() -> None:
 
     assert comparison.within_tolerance
 
+
 @pytest.mark.gpu
 @pytest.mark.skipif(
     not torch.cuda.is_available(),
@@ -103,6 +105,7 @@ def test_torch_cpu_and_cuda_are_statistically_consistent() -> None:
     )
 
     assert comparison.within_tolerance
+
 
 @pytest.mark.gpu
 @pytest.mark.skipif(

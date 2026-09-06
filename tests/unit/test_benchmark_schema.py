@@ -91,6 +91,8 @@ def test_invalid_git_tree_state_is_rejected() -> None:
         match="git_tree_state",
     ):
         validate_benchmark_metadata(row)
+
+
 def test_failed_validation_status_is_rejected() -> None:
     row = _valid_row()
     row["validation_status"] = "failed"
@@ -116,4 +118,3 @@ def test_cuda_metadata_requires_gpu_name() -> None:
     row["gpu_name"] = "Tesla T4"
 
     validate_benchmark_metadata(row)
-

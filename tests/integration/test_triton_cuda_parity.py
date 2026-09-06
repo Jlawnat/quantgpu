@@ -9,9 +9,7 @@ triton_backend = pytest.importorskip(
     reason="Triton is not installed",
 )
 
-price_european_call_triton_cuda = (
-    triton_backend.price_european_call_triton_cuda
-)
+price_european_call_triton_cuda = triton_backend.price_european_call_triton_cuda
 
 
 pytestmark = [
@@ -21,6 +19,7 @@ pytestmark = [
         reason="CUDA is not available",
     ),
 ]
+
 
 def test_triton_cuda_matches_black_scholes() -> None:
     result = price_european_call_triton_cuda(

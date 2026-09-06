@@ -139,9 +139,7 @@ def _benchmark_candidate(
         "end_to_end_median_ms": wall_median_seconds * 1_000.0,
         "min_ms": device_timing.min_seconds * 1_000.0,
         "max_ms": device_timing.max_seconds * 1_000.0,
-        "throughput_paths_per_sec": (
-            N_PATHS / device_timing.median_seconds
-        ),
+        "throughput_paths_per_sec": (N_PATHS / device_timing.median_seconds),
         "estimated_price": result.price,
         "reference_price": reference_price,
         "absolute_error": abs(result.price - reference_price),
@@ -154,52 +152,28 @@ def _benchmark_candidate(
 def _add_speedups(
     rows: list[dict[str, str | int | float]],
 ) -> None:
-    fp64_row = next(
-        row
-        for row in rows
-        if row["backend"] == "torch_cuda_fp64"
-    )
+    fp64_row = next(row for row in rows if row["backend"] == "torch_cuda_fp64")
 
-    eager_fp32_row = next(
-        row
-        for row in rows
-        if row["backend"] == "torch_cuda_fp32"
-    )
+    eager_fp32_row = next(row for row in rows if row["backend"] == "torch_cuda_fp32")
 
     compiled_fp32_row = next(
-        row
-        for row in rows
-        if row["backend"] == "torch_cuda_compiled_fp32"
+        row for row in rows if row["backend"] == "torch_cuda_compiled_fp32"
     )
 
-    fp64_ms = float(
-        fp64_row["end_to_end_median_ms"]
-    )
+    fp64_ms = float(fp64_row["end_to_end_median_ms"])
 
-    eager_fp32_ms = float(
-        eager_fp32_row["end_to_end_median_ms"]
-    )
+    eager_fp32_ms = float(eager_fp32_row["end_to_end_median_ms"])
 
-    compiled_fp32_ms = float(
-        compiled_fp32_row["end_to_end_median_ms"]
-    )
+    compiled_fp32_ms = float(compiled_fp32_row["end_to_end_median_ms"])
 
     for row in rows:
-        row_ms = float(
-            row["end_to_end_median_ms"]
-        )
+        row_ms = float(row["end_to_end_median_ms"])
 
-        row["speedup_vs_fp64"] = (
-            fp64_ms / row_ms
-        )
+        row["speedup_vs_fp64"] = fp64_ms / row_ms
 
-        row["speedup_vs_eager_fp32"] = (
-            eager_fp32_ms / row_ms
-        )
+        row["speedup_vs_eager_fp32"] = eager_fp32_ms / row_ms
 
-        row["speedup_vs_compiled_fp32"] = (
-            compiled_fp32_ms / row_ms
-        )
+        row["speedup_vs_compiled_fp32"] = compiled_fp32_ms / row_ms
 
 
 def _save_results(
@@ -318,9 +292,7 @@ def main() -> None:
 
     _save_results(rows)
 
-    print(
-        f"\nSaved results to {RESULTS_FILE}"
-    )
+    print(f"\nSaved results to {RESULTS_FILE}")
 
 
 if __name__ == "__main__":

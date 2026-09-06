@@ -53,7 +53,7 @@ def price_european_call_torch_cuda_fused(
 
     if seed is None:
         generator.seed()
-    else:   
+    else:
         generator.manual_seed(seed)
 
     z = torch.randn(
@@ -82,10 +82,7 @@ def price_european_call_torch_cuda_fused(
         standard_error = 0.0
     else:
         standard_error = float(
-            (
-                discounted_payoffs.std(unbiased=True)
-                / sqrt(n_paths)
-            ).item()
+            (discounted_payoffs.std(unbiased=True) / sqrt(n_paths)).item()
         )
 
     return PricingResult(

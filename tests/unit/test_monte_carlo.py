@@ -26,7 +26,7 @@ def test_monte_carlo_price_matches_black_scholes() -> None:
 
     assert result.price == pytest.approx(
         reference,
-        rel=monte_carlo_tolerance(result.standard_error),   
+        rel=monte_carlo_tolerance(result.standard_error),
     )
 
 
@@ -67,6 +67,8 @@ def test_monte_carlo_is_reproducible_with_same_seed() -> None:
     )
 
     assert first == second
+
+
 def test_monte_carlo_rejects_invalid_strike() -> None:
     with pytest.raises(
         ValueError,

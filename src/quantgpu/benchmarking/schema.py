@@ -37,16 +37,11 @@ def validate_benchmark_metadata(
     row: Mapping[str, object],
 ) -> None:
     """Validate required reproducibility metadata for a benchmark row."""
-    missing = [
-        field
-        for field in REQUIRED_REPRODUCIBILITY_FIELDS
-        if field not in row
-    ]
+    missing = [field for field in REQUIRED_REPRODUCIBILITY_FIELDS if field not in row]
 
     if missing:
         raise ValueError(
-            "benchmark row missing required metadata: "
-            + ", ".join(missing)
+            "benchmark row missing required metadata: " + ", ".join(missing)
         )
 
     blank = [
@@ -56,15 +51,11 @@ def validate_benchmark_metadata(
     ]
 
     if blank:
-        raise ValueError(
-            "benchmark row contains blank metadata: "
-            + ", ".join(blank)
-        )
+        raise ValueError("benchmark row contains blank metadata: " + ", ".join(blank))
 
     if row["schema_version"] != BENCHMARK_SCHEMA_VERSION:
         raise ValueError(
-            "benchmark row schema version does not match "
-            f"{BENCHMARK_SCHEMA_VERSION}"
+            f"benchmark row schema version does not match {BENCHMARK_SCHEMA_VERSION}"
         )
 
     if row["git_tree_state"] not in {
@@ -72,19 +63,13 @@ def validate_benchmark_metadata(
         "dirty",
         "unknown",
     }:
-        raise ValueError(
-            "git_tree_state must be clean, dirty, or unknown"
-        )
+        raise ValueError("git_tree_state must be clean, dirty, or unknown")
 
     if row["validation_status"] != "passed":
-        raise ValueError(
-            "benchmark result must pass numerical validation"
-        )
+        raise ValueError("benchmark result must pass numerical validation")
 
     if row["device"] == "cuda":
         gpu_name = row.get("gpu_name")
 
         if gpu_name is None or gpu_name == "":
-            raise ValueError(
-                "CUDA benchmark row must include gpu_name"
-            )
+            raise ValueError("CUDA benchmark row must include gpu_name")

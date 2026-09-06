@@ -52,9 +52,6 @@ def combined_monte_carlo_tolerance(
     if z_score <= 0.0:
         raise ValueError("z_score must be positive")
 
-    combined_error = sqrt(
-        first_standard_error**2
-        + second_standard_error**2
-    )
+    combined_error = sqrt(first_standard_error**2 + second_standard_error**2)
 
     return z_score * combined_error

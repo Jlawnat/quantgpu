@@ -69,6 +69,8 @@ def test_torch_cpu_reports_standard_error() -> None:
 
     assert result.standard_error > 0.0
     assert result.n_paths == 100_000
+
+
 @pytest.mark.parametrize(
     ("spot", "volatility", "maturity", "n_paths"),
     [

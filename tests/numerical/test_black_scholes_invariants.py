@@ -122,6 +122,8 @@ def test_black_scholes_is_homogeneous_in_spot_and_strike() -> None:
         scale * base,
         rel=1e-12,
     )
+
+
 def test_call_at_expiry_equals_intrinsic_value() -> None:
     price = black_scholes_call(
         120.0,

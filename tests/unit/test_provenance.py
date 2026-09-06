@@ -94,7 +94,10 @@ def test_git_command_handles_command_failure(
         fail,
     )
 
-    assert provenance._run_git_command(
-        "rev-parse",
-        "HEAD",
-    ) is None
+    assert (
+        provenance._run_git_command(
+            "rev-parse",
+            "HEAD",
+        )
+        is None
+    )

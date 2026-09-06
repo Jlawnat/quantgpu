@@ -34,17 +34,13 @@ def black_scholes_call(
 
     sqrt_t = sqrt(maturity)
 
-    d1 = (
-        log(spot / strike)
-        + (rate + 0.5 * volatility**2) * maturity
-    ) / (volatility * sqrt_t)
+    d1 = (log(spot / strike) + (rate + 0.5 * volatility**2) * maturity) / (
+        volatility * sqrt_t
+    )
 
     d2 = d1 - volatility * sqrt_t
 
-    return (
-        spot * _normal_cdf(d1)
-        - strike * exp(-rate * maturity) * _normal_cdf(d2)
-    )
+    return spot * _normal_cdf(d1) - strike * exp(-rate * maturity) * _normal_cdf(d2)
 
 
 def black_scholes_put(

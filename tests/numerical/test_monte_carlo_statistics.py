@@ -17,32 +17,22 @@ def _discounted_call_payoff_std(
 ) -> float:
     sqrt_t = sqrt(maturity)
 
-    d1 = (
-        log(spot / strike)
-        + (rate + 0.5 * volatility**2) * maturity
-    ) / (volatility * sqrt_t)
+    d1 = (log(spot / strike) + (rate + 0.5 * volatility**2) * maturity) / (
+        volatility * sqrt_t
+    )
 
     d2 = d1 - volatility * sqrt_t
 
-    d3 = (
-        log(spot / strike)
-        + (rate + 1.5 * volatility**2) * maturity
-    ) / (volatility * sqrt_t)
+    d3 = (log(spot / strike) + (rate + 1.5 * volatility**2) * maturity) / (
+        volatility * sqrt_t
+    )
 
     normal = NormalDist()
 
     second_moment = (
-        spot**2
-        * exp(volatility**2 * maturity)
-        * normal.cdf(d3)
-        - 2.0
-        * strike
-        * spot
-        * exp(-rate * maturity)
-        * normal.cdf(d1)
-        + strike**2
-        * exp(-2.0 * rate * maturity)
-        * normal.cdf(d2)
+        spot**2 * exp(volatility**2 * maturity) * normal.cdf(d3)
+        - 2.0 * strike * spot * exp(-rate * maturity) * normal.cdf(d1)
+        + strike**2 * exp(-2.0 * rate * maturity) * normal.cdf(d2)
     )
 
     mean = black_scholes_call(

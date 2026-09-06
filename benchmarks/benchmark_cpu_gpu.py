@@ -233,9 +233,7 @@ def benchmark_cuda_backend(
         "end_to_end_median_ms": wall_median_seconds * 1_000.0,
         "min_ms": device_timing.min_seconds * 1_000.0,
         "max_ms": device_timing.max_seconds * 1_000.0,
-        "throughput_paths_per_sec": (
-            n_paths / device_timing.median_seconds
-        ),
+        "throughput_paths_per_sec": (n_paths / device_timing.median_seconds),
         "estimated_price": result.price,
         "reference_price": reference_price,
         "absolute_error": abs(result.price - reference_price),
@@ -250,19 +248,11 @@ def add_speedups(
 ) -> None:
     """Add speedups versus NumPy and PyTorch CPU."""
     for n_paths in PATH_COUNTS:
-        matching = [
-            row
-            for row in rows
-            if int(row["n_paths"]) == n_paths
-        ]
+        matching = [row for row in rows if int(row["n_paths"]) == n_paths]
 
-        numpy_row = next(
-            row for row in matching if row["backend"] == "numpy_cpu"
-        )
+        numpy_row = next(row for row in matching if row["backend"] == "numpy_cpu")
 
-        torch_cpu_row = next(
-            row for row in matching if row["backend"] == "torch_cpu"
-        )
+        torch_cpu_row = next(row for row in matching if row["backend"] == "torch_cpu")
 
         numpy_ms = float(numpy_row["end_to_end_median_ms"])
         torch_cpu_ms = float(torch_cpu_row["end_to_end_median_ms"])

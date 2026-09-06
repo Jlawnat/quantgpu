@@ -102,9 +102,7 @@ def price_european_call_torch_cuda_compiled(
     if n_paths == 1:
         standard_error = 0.0
     else:
-        standard_error = float(
-            (std / sqrt(n_paths)).item()
-        )
+        standard_error = float((std / sqrt(n_paths)).item())
 
     return PricingResult(
         price=price,

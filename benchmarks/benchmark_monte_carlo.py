@@ -55,12 +55,7 @@ def run_benchmark() -> list[dict[str, str | int | float]]:
 
     rows: list[dict[str, str | int | float]] = []
 
-    print(
-        f"{'paths':>12} "
-        f"{'median_ms':>12} "
-        f"{'paths/sec':>15} "
-        f"{'abs_error':>12}"
-    )
+    print(f"{'paths':>12} {'median_ms':>12} {'paths/sec':>15} {'abs_error':>12}")
 
     for n_paths in PATH_COUNTS:
 

@@ -43,14 +43,15 @@ def _payoff_moments_kernel(
         other=0.0,
     )
 
-    terminal = spot * tl.exp(
-        drift_term + diffusion_scale * z
-    )
+    terminal = spot * tl.exp(drift_term + diffusion_scale * z)
 
-    payoff = tl.maximum(
-        terminal - strike,
-        0.0,
-    ) * discount_factor
+    payoff = (
+        tl.maximum(
+            terminal - strike,
+            0.0,
+        )
+        * discount_factor
+    )
 
     payoff = tl.where(
         mask,
@@ -142,9 +143,7 @@ def price_european_call_triton_cuda(
         partial_sums,
     )
 
-    drift_term = (
-        rate - 0.5 * volatility**2
-    ) * maturity
+    drift_term = (rate - 0.5 * volatility**2) * maturity
 
     diffusion_scale = volatility * sqrt(maturity)
     discount_factor = exp(-rate * maturity)
@@ -171,28 +170,19 @@ def price_european_call_triton_cuda(
         dtype=torch.float64,
     )
 
-    price = float(
-        (total / n_paths).item()
-    )
+    price = float((total / n_paths).item())
 
     if n_paths == 1:
         standard_error = 0.0
     else:
-        variance_numerator = (
-            total_square
-            - total * total / n_paths
-        )
+        variance_numerator = total_square - total * total / n_paths
 
         sample_variance = torch.clamp(
             variance_numerator / (n_paths - 1),
             min=0.0,
         )
 
-        standard_error = float(
-            torch.sqrt(
-                sample_variance / n_paths
-            ).item()
-        )
+        standard_error = float(torch.sqrt(sample_variance / n_paths).item())
 
     return PricingResult(
         price=price,

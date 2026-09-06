@@ -50,7 +50,7 @@ def simulate_gbm_terminal_torch_cuda(
 
     if seed is None:
         generator.seed()
-    else:   
+    else:
         generator.manual_seed(seed)
 
     z = torch.randn(
@@ -60,10 +60,9 @@ def simulate_gbm_terminal_torch_cuda(
         device=device,
     )
 
-    exponent = (
-        (drift - 0.5 * volatility**2) * maturity
-        + volatility * sqrt(maturity) * z
-    )
+    exponent = (drift - 0.5 * volatility**2) * maturity + volatility * sqrt(
+        maturity
+    ) * z
 
     return spot * torch.exp(exponent)
 
@@ -106,10 +105,7 @@ def price_european_call_torch_cuda(
         standard_error = 0.0
     else:
         standard_error = float(
-            (
-                discounted_payoffs.std(unbiased=True)
-                / sqrt(n_paths)
-            ).item()
+            (discounted_payoffs.std(unbiased=True) / sqrt(n_paths)).item()
         )
 
     return PricingResult(

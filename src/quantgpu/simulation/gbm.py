@@ -34,9 +34,8 @@ def simulate_gbm_terminal(
     rng = np.random.default_rng(seed)
     z = rng.standard_normal(n_paths)
 
-    exponent = (
-        (drift - 0.5 * volatility**2) * maturity
-        + volatility * sqrt(maturity) * z
-    )
+    exponent = (drift - 0.5 * volatility**2) * maturity + volatility * sqrt(
+        maturity
+    ) * z
 
     return spot * np.exp(exponent)

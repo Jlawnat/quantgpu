@@ -35,10 +35,7 @@ def test_distribution_version_handles_missing_package(
         missing,
     )
 
-    assert (
-        environment._distribution_version("missing-package")
-        == "not-installed"
-    )
+    assert environment._distribution_version("missing-package") == "not-installed"
 
 
 def test_get_software_environment(
@@ -75,6 +72,8 @@ def test_get_software_environment(
     assert result.torch_version == "2.10.0"
     assert result.cuda_version == "12.8"
     assert result.triton_version == "3.6.0"
+
+
 def test_cuda_version_with_torch_available() -> None:
     expected = torch.version.cuda or "none"
 
