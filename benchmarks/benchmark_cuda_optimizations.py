@@ -29,10 +29,24 @@ RESULTS_FILE = RESULTS_DIR / "cuda_optimization_comparison_v1.csv"
 N_PATHS = 10_000_000
 WARMUP_RUNS = 3
 REPETITIONS = 10
+PRECONDITION_RUNS = 5
 SEED = 42
 
 BackendFunction = Callable[..., PricingResult]
+def _precondition_gpu() -> None:
+    for _ in range(PRECONDITION_RUNS):
+        price_european_call_torch_cuda(
+            spot=100.0,
+            strike=100.0,
+            maturity=1.0,
+            rate=0.05,
+            volatility=0.20,
+            n_paths=N_PATHS,
+            seed=SEED,
+            dtype=torch.float64,
+        )
 
+    torch.cuda.synchronize()
 
 def _benchmark_candidate(
     *,
@@ -160,6 +174,7 @@ def _save_results(
 def main() -> None:
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is not available")
+    _precondition_gpu()
 
     reference_price = black_scholes_call(
         spot=100.0,
