@@ -56,6 +56,7 @@ omit = [
 [tool.coverage.report]
 show_missing = true
 skip_covered = false
+fail_under = 95
 
 [tool.ruff]
 line-length = 88
@@ -68,3 +69,11 @@ select = ["E", "F", "I", "UP", "B"]
 python_version = "3.12"
 strict = true
 warn_unused_configs = true
+[[tool.mypy.overrides]]
+module = ["quantgpu.backends.triton_cuda"]
+disable_error_code = [
+    "import-not-found",
+    "import-untyped",
+    "untyped-decorator",
+    "no-untyped-def",
+]

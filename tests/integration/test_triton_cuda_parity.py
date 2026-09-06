@@ -1,14 +1,17 @@
 import pytest
 import torch
-pytest.importorskip(
-    "triton",
-    reason="Triton is not installed",
-)
-from quantgpu.backends.triton_cuda import (
-    price_european_call_triton_cuda,
-)
+
 from quantgpu.pricing.black_scholes import black_scholes_call
 from quantgpu.validation.tolerances import monte_carlo_tolerance
+
+triton_backend = pytest.importorskip(
+    "quantgpu.backends.triton_cuda",
+    reason="Triton is not installed",
+)
+
+price_european_call_triton_cuda = (
+    triton_backend.price_european_call_triton_cuda
+)
 
 
 pytestmark = [

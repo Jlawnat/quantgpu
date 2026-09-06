@@ -1,3 +1,7 @@
+from quantgpu.validation.parity import (
+    BackendComparison,
+    compare_pricing_results,
+)
 from quantgpu.validation.tolerances import (
     FLOAT32_TOLERANCE,
     FLOAT64_TOLERANCE,
@@ -6,10 +10,7 @@ from quantgpu.validation.tolerances import (
     combined_monte_carlo_tolerance,
     monte_carlo_tolerance,
 )
-from quantgpu.validation.parity import (
-    BackendComparison,
-    compare_pricing_results,
-)
+
 __all__ = [
     "FLOAT32_TOLERANCE",
     "FLOAT64_TOLERANCE",

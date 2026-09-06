@@ -8,6 +8,7 @@ import torch
 from quantgpu.backends.protocol import PricingResult
 from quantgpu.simulation.rng import validate_seed
 
+
 @dataclass(frozen=True)
 class TorchMonteCarloResult:
     """Summary of a PyTorch CPU Monte Carlo pricing estimate."""

@@ -6,6 +6,7 @@ from quantgpu.backends.torch_cpu import (
 from quantgpu.pricing.black_scholes import black_scholes_call
 from quantgpu.validation.tolerances import monte_carlo_tolerance
 
+
 def test_torch_cpu_matches_black_scholes() -> None:
     result = price_european_call_torch_cpu(
         spot=100.0,

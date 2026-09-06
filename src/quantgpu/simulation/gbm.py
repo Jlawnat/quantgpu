@@ -4,7 +4,9 @@ from math import sqrt
 
 import numpy as np
 from numpy.typing import NDArray
+
 from quantgpu.simulation.rng import validate_seed
+
 
 def simulate_gbm_terminal(
     *,

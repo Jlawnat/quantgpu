@@ -1,4 +1,5 @@
 import pytest
+
 from quantgpu.backends.protocol import PricingResult
 from quantgpu.validation.parity import compare_pricing_results
 

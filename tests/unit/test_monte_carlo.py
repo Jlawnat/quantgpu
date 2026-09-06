@@ -4,6 +4,7 @@ from quantgpu.pricing.black_scholes import black_scholes_call
 from quantgpu.pricing.monte_carlo import price_european_call_mc
 from quantgpu.validation.tolerances import monte_carlo_tolerance
 
+
 def test_monte_carlo_price_matches_black_scholes() -> None:
     result = price_european_call_mc(
         spot=100.0,

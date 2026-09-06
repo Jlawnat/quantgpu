@@ -7,7 +7,6 @@ from quantgpu.backends.torch_cuda_compiled import (
 from quantgpu.pricing.black_scholes import black_scholes_call
 from quantgpu.validation.tolerances import monte_carlo_tolerance
 
-
 pytestmark = [
     pytest.mark.gpu,
     pytest.mark.skipif(

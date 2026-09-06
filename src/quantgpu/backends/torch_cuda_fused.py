@@ -7,6 +7,7 @@ import torch
 from quantgpu.backends.protocol import PricingResult
 from quantgpu.simulation.rng import validate_seed
 
+
 def _require_cuda() -> torch.device:
     """Return the CUDA device or raise if CUDA is unavailable."""
     if not torch.cuda.is_available():
