@@ -8,6 +8,7 @@ from pathlib import Path
 from quantgpu.backends.numpy_cpu import price_european_call_numpy_cpu
 from quantgpu.backends.protocol import PricingResult
 from quantgpu.backends.torch_cpu import price_european_call_torch_cpu
+from quantgpu.benchmarking.environment import get_software_environment
 from quantgpu.benchmarking.provenance import get_source_provenance
 from quantgpu.benchmarking.schema import BENCHMARK_SCHEMA_VERSION
 from quantgpu.benchmarking.system_info import get_system_info
@@ -84,6 +85,7 @@ def benchmark_backend(
 
     system_info = get_system_info()
     provenance = get_source_provenance()
+    software = get_software_environment()
 
     return {
         "schema_version": BENCHMARK_SCHEMA_VERSION,
@@ -92,7 +94,12 @@ def benchmark_backend(
         "timestamp_utc": datetime.now(UTC).isoformat(),
         "backend": backend_name,
         "device": "cpu",
-        "python_version": system_info.python_version,
+        "python_version": software.python_version,
+        "quantgpu_version": software.quantgpu_version,
+        "numpy_version": software.numpy_version,
+        "torch_version": software.torch_version,
+        "cuda_version": software.cuda_version,
+        "triton_version": software.triton_version,
         "os": system_info.os,
         "os_release": system_info.os_release,
         "machine": system_info.machine,

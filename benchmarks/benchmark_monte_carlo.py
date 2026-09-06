@@ -4,8 +4,7 @@ import csv
 from datetime import UTC, datetime
 from pathlib import Path
 
-import numpy as np
-
+from quantgpu.benchmarking.environment import get_software_environment
 from quantgpu.benchmarking.provenance import get_source_provenance
 from quantgpu.benchmarking.schema import BENCHMARK_SCHEMA_VERSION
 from quantgpu.benchmarking.system_info import get_system_info
@@ -40,6 +39,7 @@ def run_benchmark() -> list[dict[str, str | int | float]]:
 
     system_info = get_system_info()
     provenance = get_source_provenance()
+    software = get_software_environment()
 
     reference_price = black_scholes_call(
         spot=spot,
@@ -109,8 +109,12 @@ def run_benchmark() -> list[dict[str, str | int | float]]:
                 "timestamp_utc": datetime.now(UTC).isoformat(),
                 "backend": BACKEND,
                 "device": DEVICE,
-                "python_version": system_info.python_version,
-                "numpy_version": np.__version__,
+                "python_version": software.python_version,
+                "quantgpu_version": software.quantgpu_version,
+                "numpy_version": software.numpy_version,
+                "torch_version": software.torch_version,
+                "cuda_version": software.cuda_version,
+                "triton_version": software.triton_version,
                 "os": system_info.os,
                 "os_release": system_info.os_release,
                 "machine": system_info.machine,

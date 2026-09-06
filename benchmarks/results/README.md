@@ -27,16 +27,26 @@ Each row records:
 - random seed
 - Git commit SHA
 - Git working-tree state
+- QuantGPU version
+- NumPy version
+- PyTorch version
+- CUDA version
+- Triton version
 
 Headline performance results should be derived from saved benchmark data rather than copied manually from terminal output.
 ## Schema versioning
 
 Historical benchmark CSVs are preserved unchanged.
 
-Schema `1.1` adds source-code provenance fields:
+Schema `1.1` adds reproducibility provenance fields including:
 
 - `git_commit`
 - `git_tree_state`
+- `quantgpu_version`
+- `numpy_version`
+- `torch_version`
+- `cuda_version`
+- `triton_version`
 
 New benchmark schema versions write to new versioned result files rather than
 rewriting existing benchmark artifacts.

@@ -14,6 +14,7 @@ from quantgpu.backends.protocol import PricingResult
 from quantgpu.backends.torch_cpu import price_european_call_torch_cpu
 from quantgpu.backends.torch_cuda import price_european_call_torch_cuda
 from quantgpu.benchmarking.cuda_timer import benchmark_cuda_callable
+from quantgpu.benchmarking.environment import get_software_environment
 from quantgpu.benchmarking.provenance import get_source_provenance
 from quantgpu.benchmarking.schema import BENCHMARK_SCHEMA_VERSION
 from quantgpu.benchmarking.system_info import get_system_info
@@ -94,6 +95,7 @@ def benchmark_cpu_backend(
 
     system_info = get_system_info()
     provenance = get_source_provenance()
+    software = get_software_environment()
 
     median_ms = timing.median_seconds * 1_000.0
 
@@ -105,9 +107,12 @@ def benchmark_cpu_backend(
         "backend": backend_name,
         "device": "cpu",
         "dtype": "float64",
-        "python_version": system_info.python_version,
-        "torch_version": torch.__version__,
-        "cuda_version": torch.version.cuda or "none",
+        "python_version": software.python_version,
+        "quantgpu_version": software.quantgpu_version,
+        "numpy_version": software.numpy_version,
+        "torch_version": software.torch_version,
+        "cuda_version": software.cuda_version,
+        "triton_version": software.triton_version,
         "gpu_name": "none",
         "os": system_info.os,
         "os_release": system_info.os_release,
@@ -189,6 +194,7 @@ def benchmark_cuda_backend(
 
     system_info = get_system_info()
     provenance = get_source_provenance()
+    software = get_software_environment()
     gpu_name = torch.cuda.get_device_name(0)
 
     return {
@@ -199,9 +205,12 @@ def benchmark_cuda_backend(
         "backend": "torch_cuda",
         "device": "cuda",
         "dtype": "float64",
-        "python_version": system_info.python_version,
-        "torch_version": torch.__version__,
-        "cuda_version": torch.version.cuda or "unknown",
+        "python_version": software.python_version,
+        "quantgpu_version": software.quantgpu_version,
+        "numpy_version": software.numpy_version,
+        "torch_version": software.torch_version,
+        "cuda_version": software.cuda_version,
+        "triton_version": software.triton_version,
         "gpu_name": gpu_name,
         "os": system_info.os,
         "os_release": system_info.os_release,

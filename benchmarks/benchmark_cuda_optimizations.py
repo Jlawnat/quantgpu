@@ -21,6 +21,7 @@ from quantgpu.backends.triton_cuda import (
     price_european_call_triton_cuda,
 )
 from quantgpu.benchmarking.cuda_timer import benchmark_cuda_callable
+from quantgpu.benchmarking.environment import get_software_environment
 from quantgpu.benchmarking.provenance import get_source_provenance
 from quantgpu.benchmarking.schema import BENCHMARK_SCHEMA_VERSION
 from quantgpu.benchmarking.system_info import get_system_info
@@ -101,6 +102,7 @@ def _benchmark_candidate(
     wall_median_seconds = median(wall_times)
     system_info = get_system_info()
     provenance = get_source_provenance()
+    software = get_software_environment()
 
     return {
         "schema_version": BENCHMARK_SCHEMA_VERSION,
@@ -110,9 +112,12 @@ def _benchmark_candidate(
         "backend": name,
         "device": "cuda",
         "dtype": str(dtype),
-        "python_version": system_info.python_version,
-        "torch_version": torch.__version__,
-        "cuda_version": torch.version.cuda or "unknown",
+        "python_version": software.python_version,
+        "quantgpu_version": software.quantgpu_version,
+        "numpy_version": software.numpy_version,
+        "torch_version": software.torch_version,
+        "cuda_version": software.cuda_version,
+        "triton_version": software.triton_version,
         "gpu_name": torch.cuda.get_device_name(0),
         "os": system_info.os,
         "os_release": system_info.os_release,
