@@ -17,6 +17,9 @@ from quantgpu.backends.torch_cuda_compiled import (
 from quantgpu.backends.torch_cuda_fused import (
     price_european_call_torch_cuda_fused,
 )
+from quantgpu.backends.triton_cuda import (
+    price_european_call_triton_cuda,
+)
 from quantgpu.benchmarking.cuda_timer import benchmark_cuda_callable
 from quantgpu.benchmarking.schema import BENCHMARK_SCHEMA_VERSION
 from quantgpu.benchmarking.system_info import get_system_info
@@ -24,7 +27,7 @@ from quantgpu.benchmarking.validation import require_valid_result
 from quantgpu.pricing.black_scholes import black_scholes_call
 
 RESULTS_DIR = Path("benchmarks/results")
-RESULTS_FILE = RESULTS_DIR / "cuda_optimization_comparison_v1.csv"
+RESULTS_FILE = RESULTS_DIR / "cuda_optimization_comparison_v2.csv"
 
 N_PATHS = 10_000_000
 WARMUP_RUNS = 3
@@ -33,6 +36,8 @@ PRECONDITION_RUNS = 5
 SEED = 42
 
 BackendFunction = Callable[..., PricingResult]
+
+
 def _precondition_gpu() -> None:
     for _ in range(PRECONDITION_RUNS):
         price_european_call_torch_cuda(
@@ -47,6 +52,7 @@ def _precondition_gpu() -> None:
         )
 
     torch.cuda.synchronize()
+
 
 def _benchmark_candidate(
     *,
@@ -131,27 +137,60 @@ def _add_speedups(
     rows: list[dict[str, str | int | float]],
 ) -> None:
     fp64_row = next(
-        row for row in rows if row["backend"] == "torch_cuda_fp64"
+        row
+        for row in rows
+        if row["backend"] == "torch_cuda_fp64"
     )
 
     eager_fp32_row = next(
-        row for row in rows if row["backend"] == "torch_cuda_fp32"
+        row
+        for row in rows
+        if row["backend"] == "torch_cuda_fp32"
     )
 
-    fp64_ms = float(fp64_row["end_to_end_median_ms"])
-    eager_fp32_ms = float(eager_fp32_row["end_to_end_median_ms"])
+    compiled_fp32_row = next(
+        row
+        for row in rows
+        if row["backend"] == "torch_cuda_compiled_fp32"
+    )
+
+    fp64_ms = float(
+        fp64_row["end_to_end_median_ms"]
+    )
+
+    eager_fp32_ms = float(
+        eager_fp32_row["end_to_end_median_ms"]
+    )
+
+    compiled_fp32_ms = float(
+        compiled_fp32_row["end_to_end_median_ms"]
+    )
 
     for row in rows:
-        row_ms = float(row["end_to_end_median_ms"])
+        row_ms = float(
+            row["end_to_end_median_ms"]
+        )
 
-        row["speedup_vs_fp64"] = fp64_ms / row_ms
-        row["speedup_vs_eager_fp32"] = eager_fp32_ms / row_ms
+        row["speedup_vs_fp64"] = (
+            fp64_ms / row_ms
+        )
+
+        row["speedup_vs_eager_fp32"] = (
+            eager_fp32_ms / row_ms
+        )
+
+        row["speedup_vs_compiled_fp32"] = (
+            compiled_fp32_ms / row_ms
+        )
 
 
 def _save_results(
     rows: list[dict[str, str | int | float]],
 ) -> None:
-    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    RESULTS_DIR.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
     file_exists = RESULTS_FILE.exists()
 
@@ -174,6 +213,7 @@ def _save_results(
 def main() -> None:
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is not available")
+
     _precondition_gpu()
 
     reference_price = black_scholes_call(
@@ -205,6 +245,11 @@ def main() -> None:
             price_european_call_torch_cuda_compiled,
             torch.float32,
         ),
+        (
+            "triton_cuda_fp32",
+            price_european_call_triton_cuda,
+            torch.float32,
+        ),
     ]
 
     rows = [
@@ -230,6 +275,7 @@ def main() -> None:
         f"{'paths/sec':>16}"
         f"{'vs_fp64':>10}"
         f"{'vs_fp32':>10}"
+        f"{'vs_comp':>10}"
         f"{'abs_error':>12}"
     )
 
@@ -241,12 +287,15 @@ def main() -> None:
             f"{float(row['throughput_paths_per_sec']):16,.0f}"
             f"{float(row['speedup_vs_fp64']):10.2f}"
             f"{float(row['speedup_vs_eager_fp32']):10.2f}"
+            f"{float(row['speedup_vs_compiled_fp32']):10.2f}"
             f"{float(row['absolute_error']):12.6f}"
         )
 
     _save_results(rows)
 
-    print(f"\nSaved results to {RESULTS_FILE}")
+    print(
+        f"\nSaved results to {RESULTS_FILE}"
+    )
 
 
 if __name__ == "__main__":
