@@ -229,8 +229,7 @@ Validated GPU quality-gate result:
 
 ```text
 14 passed
-85 deselected
-```
+
 
 PyTorch JIT deprecation warnings observed in this environment are warnings,
 not correctness failures.

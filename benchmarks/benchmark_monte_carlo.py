@@ -12,6 +12,7 @@ from quantgpu.benchmarking.schema import (
 )
 from quantgpu.benchmarking.system_info import get_system_info
 from quantgpu.benchmarking.timer import benchmark_callable
+from quantgpu.benchmarking.validation import require_valid_result
 from quantgpu.pricing.black_scholes import black_scholes_call
 from quantgpu.pricing.monte_carlo import price_european_call_mc
 
@@ -89,6 +90,7 @@ def run_benchmark() -> list[dict[str, str | int | float]]:
             n_paths=n_paths,
             seed=seed,
         )
+        require_valid_result(result, reference_price)
 
         median_ms = timing.median_seconds * 1_000.0
         min_ms = timing.min_seconds * 1_000.0
@@ -113,6 +115,11 @@ def run_benchmark() -> list[dict[str, str | int | float]]:
                 "backend": BACKEND,
                 "device": DEVICE,
                 "dtype": "float64",
+                "spot": spot,
+                "strike": strike,
+                "maturity": maturity,
+                "rate": rate,
+                "volatility": volatility,
                 "python_version": software.python_version,
                 "quantgpu_version": software.quantgpu_version,
                 "numpy_version": software.numpy_version,
@@ -135,6 +142,7 @@ def run_benchmark() -> list[dict[str, str | int | float]]:
                 "reference_price": reference_price,
                 "absolute_error": absolute_error,
                 "standard_error": result.standard_error,
+                "validation_status": "passed",
                 "seed": seed,
             }
         )

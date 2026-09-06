@@ -16,16 +16,24 @@ def _valid_row() -> dict[str, object]:
         "backend": "numpy_cpu",
         "device": "cpu",
         "dtype": "float64",
+        "spot": 100.0,
+        "strike": 100.0,
+        "maturity": 1.0,
+        "rate": 0.05,
+        "volatility": 0.20,
+        "n_paths": 10_000_000,
+        "seed": 42,
+        "warmup_runs": 1,
+        "repetitions": 5,
         "python_version": "3.12.0",
         "quantgpu_version": "0.1.0",
         "numpy_version": "2.0.0",
         "torch_version": "2.10.0",
         "cuda_version": "none",
         "triton_version": "not-installed",
-        "n_paths": 10_000_000,
-        "warmup_runs": 1,
-        "repetitions": 5,
-        "seed": 42,
+        "os": "Linux",
+        "cpu_model": "Test CPU",
+        "validation_status": "passed",
     }
 
 
@@ -83,3 +91,29 @@ def test_invalid_git_tree_state_is_rejected() -> None:
         match="git_tree_state",
     ):
         validate_benchmark_metadata(row)
+def test_failed_validation_status_is_rejected() -> None:
+    row = _valid_row()
+    row["validation_status"] = "failed"
+
+    with pytest.raises(
+        ValueError,
+        match="must pass numerical validation",
+    ):
+        validate_benchmark_metadata(row)
+
+
+def test_cuda_metadata_requires_gpu_name() -> None:
+    row = _valid_row()
+    row["device"] = "cuda"
+    row["cuda_version"] = "12.8"
+
+    with pytest.raises(
+        ValueError,
+        match="must include gpu_name",
+    ):
+        validate_benchmark_metadata(row)
+
+    row["gpu_name"] = "Tesla T4"
+
+    validate_benchmark_metadata(row)
+

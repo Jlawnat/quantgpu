@@ -1,13 +1,22 @@
 from __future__ import annotations
 
-from quantgpu.backends.protocol import PricingResult
+from typing import Protocol
+
 from quantgpu.validation.tolerances import monte_carlo_tolerance
 
 
+class PricingEstimate(Protocol):
+    """Minimal pricing result required by the benchmark correctness gate."""
+
+    price: float
+    standard_error: float
+
+
 def require_valid_result(
-    result: PricingResult,
+    result: PricingEstimate,
     reference_price: float,
 ) -> None:
+    """Reject benchmark results that fail the Monte Carlo correctness gate."""
     tolerance = monte_carlo_tolerance(result.standard_error)
 
     if abs(result.price - reference_price) > tolerance:

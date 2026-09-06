@@ -47,6 +47,15 @@ Schema `1.1` adds reproducibility provenance fields including:
 - `torch_version`
 - `cuda_version`
 - `triton_version`
+- `spot`
+- `strike`
+- `maturity`
+- `rate`
+- `volatility`
+- `dtype`
+- `cpu_model`
+- `gpu_name` for CUDA results
+- `validation_status`
 
 New benchmark schema versions write to new versioned result files rather than
 rewriting existing benchmark artifacts.

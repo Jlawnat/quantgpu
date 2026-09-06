@@ -110,6 +110,11 @@ def benchmark_cpu_backend(
         "backend": backend_name,
         "device": "cpu",
         "dtype": "float64",
+        "spot": float(params["spot"]),
+        "strike": float(params["strike"]),
+        "maturity": float(params["maturity"]),
+        "rate": float(params["rate"]),
+        "volatility": float(params["volatility"]),
         "python_version": software.python_version,
         "quantgpu_version": software.quantgpu_version,
         "numpy_version": software.numpy_version,
@@ -134,6 +139,7 @@ def benchmark_cpu_backend(
         "reference_price": reference_price,
         "absolute_error": abs(result.price - reference_price),
         "standard_error": result.standard_error,
+        "validation_status": "passed",
         "seed": int(params["seed"]),
     }
 
@@ -234,6 +240,7 @@ def benchmark_cuda_backend(
         "reference_price": reference_price,
         "absolute_error": abs(result.price - reference_price),
         "standard_error": result.standard_error,
+        "validation_status": "passed",
         "seed": int(params["seed"]),
     }
 

@@ -12,16 +12,24 @@ REQUIRED_REPRODUCIBILITY_FIELDS = (
     "backend",
     "device",
     "dtype",
+    "spot",
+    "strike",
+    "maturity",
+    "rate",
+    "volatility",
+    "n_paths",
+    "seed",
+    "warmup_runs",
+    "repetitions",
     "python_version",
     "quantgpu_version",
     "numpy_version",
     "torch_version",
     "cuda_version",
     "triton_version",
-    "n_paths",
-    "warmup_runs",
-    "repetitions",
-    "seed",
+    "os",
+    "cpu_model",
+    "validation_status",
 )
 
 
@@ -67,3 +75,16 @@ def validate_benchmark_metadata(
         raise ValueError(
             "git_tree_state must be clean, dirty, or unknown"
         )
+
+    if row["validation_status"] != "passed":
+        raise ValueError(
+            "benchmark result must pass numerical validation"
+        )
+
+    if row["device"] == "cuda":
+        gpu_name = row.get("gpu_name")
+
+        if gpu_name is None or gpu_name == "":
+            raise ValueError(
+                "CUDA benchmark row must include gpu_name"
+            )

@@ -115,6 +115,11 @@ def _benchmark_candidate(
         "backend": name,
         "device": "cuda",
         "dtype": str(dtype),
+        "spot": 100.0,
+        "strike": 100.0,
+        "maturity": 1.0,
+        "rate": 0.05,
+        "volatility": 0.20,
         "python_version": software.python_version,
         "quantgpu_version": software.quantgpu_version,
         "numpy_version": software.numpy_version,
@@ -141,6 +146,7 @@ def _benchmark_candidate(
         "reference_price": reference_price,
         "absolute_error": abs(result.price - reference_price),
         "standard_error": result.standard_error,
+        "validation_status": "passed",
         "seed": SEED,
     }
 
