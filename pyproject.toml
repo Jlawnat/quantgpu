@@ -5,12 +5,29 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "quantgpu"
 dynamic = ["version"]
-description = "High-performance quantitative finance research engine for CPU/GPU benchmarking and numerical validation."
+description = "High-performance quantitative finance research engine for reproducible CPU/GPU benchmarking, numerical validation, and custom GPU optimization."
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [
     { name = "Elliot Young" }
+]
+keywords = [
+    "quantitative-finance",
+    "gpu",
+    "cuda",
+    "triton",
+    "monte-carlo",
+    "benchmarking",
+]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
 ]
 
 dependencies = [
@@ -27,7 +44,12 @@ dev = [
     "pytest-cov>=5.0",
     "ruff>=0.8",
     "mypy>=1.13",
+    "build>=1.2",
 ]
+
+[project.urls]
+Repository = "https://github.com/Jlawnat/quantgpu"
+Issues = "https://github.com/Jlawnat/quantgpu/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
