@@ -10,7 +10,10 @@ from quantgpu.backends.protocol import PricingResult
 from quantgpu.backends.torch_cpu import price_european_call_torch_cpu
 from quantgpu.benchmarking.environment import get_software_environment
 from quantgpu.benchmarking.provenance import get_source_provenance
-from quantgpu.benchmarking.schema import BENCHMARK_SCHEMA_VERSION
+from quantgpu.benchmarking.schema import (
+    BENCHMARK_SCHEMA_VERSION,
+    validate_benchmark_metadata,
+)
 from quantgpu.benchmarking.system_info import get_system_info
 from quantgpu.benchmarking.timer import benchmark_callable
 from quantgpu.pricing.black_scholes import black_scholes_call
@@ -94,6 +97,7 @@ def benchmark_backend(
         "timestamp_utc": datetime.now(UTC).isoformat(),
         "backend": backend_name,
         "device": "cpu",
+        "dtype": "float64",
         "python_version": software.python_version,
         "quantgpu_version": software.quantgpu_version,
         "numpy_version": software.numpy_version,
@@ -126,6 +130,8 @@ def save_results(
     """Append backend comparison results to CSV."""
     if not rows:
         raise ValueError("rows must not be empty")
+    for row in rows:
+        validate_benchmark_metadata(row)
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 

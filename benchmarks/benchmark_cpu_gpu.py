@@ -16,7 +16,10 @@ from quantgpu.backends.torch_cuda import price_european_call_torch_cuda
 from quantgpu.benchmarking.cuda_timer import benchmark_cuda_callable
 from quantgpu.benchmarking.environment import get_software_environment
 from quantgpu.benchmarking.provenance import get_source_provenance
-from quantgpu.benchmarking.schema import BENCHMARK_SCHEMA_VERSION
+from quantgpu.benchmarking.schema import (
+    BENCHMARK_SCHEMA_VERSION,
+    validate_benchmark_metadata,
+)
 from quantgpu.benchmarking.system_info import get_system_info
 from quantgpu.benchmarking.timer import benchmark_callable
 from quantgpu.benchmarking.validation import require_valid_result
@@ -270,6 +273,8 @@ def save_results(
     """Append benchmark rows to the versioned CSV."""
     if not rows:
         raise ValueError("rows must not be empty")
+    for row in rows:
+        validate_benchmark_metadata(row)
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 

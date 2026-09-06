@@ -6,7 +6,10 @@ from pathlib import Path
 
 from quantgpu.benchmarking.environment import get_software_environment
 from quantgpu.benchmarking.provenance import get_source_provenance
-from quantgpu.benchmarking.schema import BENCHMARK_SCHEMA_VERSION
+from quantgpu.benchmarking.schema import (
+    BENCHMARK_SCHEMA_VERSION,
+    validate_benchmark_metadata,
+)
 from quantgpu.benchmarking.system_info import get_system_info
 from quantgpu.benchmarking.timer import benchmark_callable
 from quantgpu.pricing.black_scholes import black_scholes_call
@@ -109,6 +112,7 @@ def run_benchmark() -> list[dict[str, str | int | float]]:
                 "timestamp_utc": datetime.now(UTC).isoformat(),
                 "backend": BACKEND,
                 "device": DEVICE,
+                "dtype": "float64",
                 "python_version": software.python_version,
                 "quantgpu_version": software.quantgpu_version,
                 "numpy_version": software.numpy_version,
@@ -144,6 +148,8 @@ def save_results(
     """Append benchmark results to the versioned CSV output."""
     if not rows:
         raise ValueError("rows must not be empty")
+    for row in rows:
+        validate_benchmark_metadata(row)
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 

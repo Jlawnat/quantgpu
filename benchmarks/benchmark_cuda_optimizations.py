@@ -23,7 +23,10 @@ from quantgpu.backends.triton_cuda import (
 from quantgpu.benchmarking.cuda_timer import benchmark_cuda_callable
 from quantgpu.benchmarking.environment import get_software_environment
 from quantgpu.benchmarking.provenance import get_source_provenance
-from quantgpu.benchmarking.schema import BENCHMARK_SCHEMA_VERSION
+from quantgpu.benchmarking.schema import (
+    BENCHMARK_SCHEMA_VERSION,
+    validate_benchmark_metadata,
+)
 from quantgpu.benchmarking.system_info import get_system_info
 from quantgpu.benchmarking.validation import require_valid_result
 from quantgpu.pricing.black_scholes import black_scholes_call
@@ -196,6 +199,13 @@ def _add_speedups(
 def _save_results(
     rows: list[dict[str, str | int | float]],
 ) -> None:
+    """Validate and append CUDA optimization benchmark results."""
+    if not rows:
+        raise ValueError("rows must not be empty")
+
+    for row in rows:
+        validate_benchmark_metadata(row)
+
     RESULTS_DIR.mkdir(
         parents=True,
         exist_ok=True,
