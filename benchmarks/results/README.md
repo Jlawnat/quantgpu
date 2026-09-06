@@ -25,5 +25,18 @@ Each row records:
 - numerical error
 - Monte Carlo standard error
 - random seed
+- Git commit SHA
+- Git working-tree state
 
 Headline performance results should be derived from saved benchmark data rather than copied manually from terminal output.
+## Schema versioning
+
+Historical benchmark CSVs are preserved unchanged.
+
+Schema `1.1` adds source-code provenance fields:
+
+- `git_commit`
+- `git_tree_state`
+
+New benchmark schema versions write to new versioned result files rather than
+rewriting existing benchmark artifacts.
