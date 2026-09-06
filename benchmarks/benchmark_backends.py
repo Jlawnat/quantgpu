@@ -8,13 +8,14 @@ from pathlib import Path
 from quantgpu.backends.numpy_cpu import price_european_call_numpy_cpu
 from quantgpu.backends.protocol import PricingResult
 from quantgpu.backends.torch_cpu import price_european_call_torch_cpu
+from quantgpu.benchmarking.provenance import get_source_provenance
 from quantgpu.benchmarking.schema import BENCHMARK_SCHEMA_VERSION
 from quantgpu.benchmarking.system_info import get_system_info
 from quantgpu.benchmarking.timer import benchmark_callable
 from quantgpu.pricing.black_scholes import black_scholes_call
 
 RESULTS_DIR = Path("benchmarks/results")
-RESULTS_FILE = RESULTS_DIR / "backend_comparison_v1.csv"
+RESULTS_FILE = RESULTS_DIR / "backend_comparison_v2.csv"
 
 WARMUP_RUNS = 1
 REPETITIONS = 5
@@ -82,9 +83,12 @@ def benchmark_backend(
     absolute_error = abs(result.price - reference_price)
 
     system_info = get_system_info()
+    provenance = get_source_provenance()
 
     return {
         "schema_version": BENCHMARK_SCHEMA_VERSION,
+        "git_commit": provenance.git_commit,
+        "git_tree_state": provenance.git_tree_state,
         "timestamp_utc": datetime.now(UTC).isoformat(),
         "backend": backend_name,
         "device": "cpu",

@@ -6,6 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
+from quantgpu.benchmarking.provenance import get_source_provenance
 from quantgpu.benchmarking.schema import BENCHMARK_SCHEMA_VERSION
 from quantgpu.benchmarking.system_info import get_system_info
 from quantgpu.benchmarking.timer import benchmark_callable
@@ -13,7 +14,7 @@ from quantgpu.pricing.black_scholes import black_scholes_call
 from quantgpu.pricing.monte_carlo import price_european_call_mc
 
 RESULTS_DIR = Path("benchmarks/results")
-RESULTS_FILE = RESULTS_DIR / "monte_carlo_numpy_v1.csv"
+RESULTS_FILE = RESULTS_DIR / "monte_carlo_numpy_v2.csv"
 
 BACKEND = "numpy"
 DEVICE = "cpu"
@@ -38,6 +39,7 @@ def run_benchmark() -> list[dict[str, str | int | float]]:
     seed = 42
 
     system_info = get_system_info()
+    provenance = get_source_provenance()
 
     reference_price = black_scholes_call(
         spot=spot,
@@ -102,6 +104,8 @@ def run_benchmark() -> list[dict[str, str | int | float]]:
         rows.append(
             {
                 "schema_version": BENCHMARK_SCHEMA_VERSION,
+                "git_commit": provenance.git_commit,
+                "git_tree_state": provenance.git_tree_state,
                 "timestamp_utc": datetime.now(UTC).isoformat(),
                 "backend": BACKEND,
                 "device": DEVICE,

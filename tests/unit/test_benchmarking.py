@@ -7,7 +7,7 @@ from quantgpu.benchmarking.schema import BENCHMARK_SCHEMA_VERSION
 
 
 def test_benchmark_schema_version_is_defined() -> None:
-    assert BENCHMARK_SCHEMA_VERSION == "1.0"
+    assert BENCHMARK_SCHEMA_VERSION == "1.1"
 
 
 def test_benchmark_callable_reports_timing_summary(

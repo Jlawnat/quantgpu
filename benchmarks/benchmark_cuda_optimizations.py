@@ -21,13 +21,14 @@ from quantgpu.backends.triton_cuda import (
     price_european_call_triton_cuda,
 )
 from quantgpu.benchmarking.cuda_timer import benchmark_cuda_callable
+from quantgpu.benchmarking.provenance import get_source_provenance
 from quantgpu.benchmarking.schema import BENCHMARK_SCHEMA_VERSION
 from quantgpu.benchmarking.system_info import get_system_info
 from quantgpu.benchmarking.validation import require_valid_result
 from quantgpu.pricing.black_scholes import black_scholes_call
 
 RESULTS_DIR = Path("benchmarks/results")
-RESULTS_FILE = RESULTS_DIR / "cuda_optimization_comparison_v2.csv"
+RESULTS_FILE = RESULTS_DIR / "cuda_optimization_comparison_v3.csv"
 
 N_PATHS = 10_000_000
 WARMUP_RUNS = 3
@@ -99,9 +100,12 @@ def _benchmark_candidate(
 
     wall_median_seconds = median(wall_times)
     system_info = get_system_info()
+    provenance = get_source_provenance()
 
     return {
         "schema_version": BENCHMARK_SCHEMA_VERSION,
+        "git_commit": provenance.git_commit,
+        "git_tree_state": provenance.git_tree_state,
         "timestamp_utc": datetime.now(UTC).isoformat(),
         "backend": name,
         "device": "cuda",

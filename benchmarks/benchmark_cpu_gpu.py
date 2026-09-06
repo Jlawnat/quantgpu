@@ -14,6 +14,7 @@ from quantgpu.backends.protocol import PricingResult
 from quantgpu.backends.torch_cpu import price_european_call_torch_cpu
 from quantgpu.backends.torch_cuda import price_european_call_torch_cuda
 from quantgpu.benchmarking.cuda_timer import benchmark_cuda_callable
+from quantgpu.benchmarking.provenance import get_source_provenance
 from quantgpu.benchmarking.schema import BENCHMARK_SCHEMA_VERSION
 from quantgpu.benchmarking.system_info import get_system_info
 from quantgpu.benchmarking.timer import benchmark_callable
@@ -21,7 +22,7 @@ from quantgpu.benchmarking.validation import require_valid_result
 from quantgpu.pricing.black_scholes import black_scholes_call
 
 RESULTS_DIR = Path("benchmarks/results")
-RESULTS_FILE = RESULTS_DIR / "cpu_gpu_comparison_v2.csv"
+RESULTS_FILE = RESULTS_DIR / "cpu_gpu_comparison_v3.csv"
 
 CPU_WARMUP_RUNS = 1
 CPU_REPETITIONS = 5
@@ -92,11 +93,14 @@ def benchmark_cpu_backend(
     require_valid_result(result, reference_price)
 
     system_info = get_system_info()
+    provenance = get_source_provenance()
 
     median_ms = timing.median_seconds * 1_000.0
 
     return {
         "schema_version": BENCHMARK_SCHEMA_VERSION,
+        "git_commit": provenance.git_commit,
+        "git_tree_state": provenance.git_tree_state,
         "timestamp_utc": datetime.now(UTC).isoformat(),
         "backend": backend_name,
         "device": "cpu",
@@ -184,10 +188,13 @@ def benchmark_cuda_backend(
     require_valid_result(result, reference_price)
 
     system_info = get_system_info()
+    provenance = get_source_provenance()
     gpu_name = torch.cuda.get_device_name(0)
 
     return {
         "schema_version": BENCHMARK_SCHEMA_VERSION,
+        "git_commit": provenance.git_commit,
+        "git_tree_state": provenance.git_tree_state,
         "timestamp_utc": datetime.now(UTC).isoformat(),
         "backend": "torch_cuda",
         "device": "cuda",
